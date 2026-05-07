@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="DesiVastra - Premium luxury fashion, watches, jewelry, accessories and perfumes. Shop the finest collection at best prices.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesiVastra - Luxury Fashion & Accessories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/global.css?v=2">
+    <link rel="stylesheet" href="assets/css/home.css?v=2">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Global Header -->
+        <header class="global-header">
+
+            <!-- Desktop Top Utility Bar -->
+            <div class="desktop-top-bar">
+                <div class="dtb-inner">
+                    <div class="dtb-left">
+                        <i class="fa-solid fa-shield-halved"></i> Secure Checkout &nbsp;|&nbsp;
+                        <i class="fa-solid fa-truck-fast"></i> Free shipping on orders ₹999+
+                    </div>
+                    <div class="dtb-right">
+                        <a href="#">Help Center</a>
+                        <span>|</span>
+                        <a href="#" onclick="openSupportPopup()"><i class="fa-solid fa-headset"></i> Live Support 24/7</a>
+                        <span>|</span>
+                        <a href="login.html">Sign In</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Header Row -->
+            <div class="header-inner">
+                <!-- Left: Menu + Logo -->
+                <div class="header-left">
+                    <button class="hdr-icon-btn mobile-only" onclick="toggleMenu()" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
+                    <button class="d-menu-btn desktop-only" onclick="toggleMenu()" aria-label="Desktop Menu">
+                        <i class="fa-solid fa-bars"></i>
+                        <span>All</span>
+                    </button>
+                </div>
+
+                <!-- Center: Branding Logo -->
+                <div class="header-center">
+                    <a href="index.html" class="logo">Arniya<span class="gold">Hub</span></a>
+                    <span class="logo-badge mobile-only">LUXURY</span>
+                </div>
+
+                <!-- Desktop: Enhanced Search with Category -->
+                <div class="desktop-search">
+                    <select class="search-cat-select" id="desktop-search-cat" aria-label="Search Category">
+                        <option>All</option>
+                        <option>Watches</option>
+                        <option>Jewelry</option>
+                        <option>Accessories</option>
+                        <option>Perfumes</option>
+                    </select>
+                    <input type="text" id="desktop-search-input" placeholder="Search ARNiya Smart Hub...">
+                    <button id="desktop-search-btn" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <!-- Mobile: Support 24/7 Button -->
+                <button class="support-24-btn mobile-only" onclick="openSupportPopup()" aria-label="24/7 Support">
+                    <span class="support-pulse"></span>
+                    <i class="fa-solid fa-headset"></i>
+                    <span>24/7</span>
+                </button>
+
+                <!-- Desktop Nav Items -->
+                <div class="desktop-nav-items">
+                    <!-- Delivery Location -->
+                    <div class="d-nav-item d-location">
+                        <span class="small"><i class="fa-solid fa-location-dot" style="color:var(--gold-light)"></i> Deliver to</span>
+                        <span class="bold">India 🇮🇳</span>
+                    </div>
+                    <!-- Account -->
+                    <div class="d-nav-item" onclick="handleAccountClick()">
+                        <span class="small">Hello, Guest</span>
+                        <span class="bold">Account &amp; Lists <i class="fa-solid fa-caret-down" style="font-size:10px"></i></span>
+                    </div>
+                    <!-- Returns -->
+                    <div class="d-nav-item" onclick="handleAccountClick()">
+                        <span class="small">Returns</span>
+                        <span class="bold">&amp; Orders</span>
+                    </div>
+                    <!-- Wishlist -->
+                    <div class="d-nav-item d-icon-item" onclick="openRightDrawer('wishlist')" title="Wishlist">
+                        <div class="d-icon-wrapper">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+                        <span class="bold">Wishlist</span>
+                    </div>
+                    <!-- Cart -->
+                    <div class="d-nav-item cart-btn" onclick="openRightDrawer('cart')">
+                        <span class="cart-badge" id="&">0</span>
+                        <i class="fa-solid fa-cart-shopping fa-2x"></i>
+                        <span class="bold" style="margin-bottom:2px;">Cart</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gold Shine Accent Line (Mobile Only) -->
+            <div class="header-gold-line mobile-only"></div>
+
+            <!-- Desktop Secondary Nav -->
+            <div class="desktop-secondary-nav">
+                <a href="shop.html" class="sec-nav-deals"><i class="fa-solid fa-bolt"></i> Today's Deals</a>
+                <a href="shop.html">New Arrivals</a>
+                <a href="shop.html">Best Sellers</a>
+                <a href="shop.html">Watches</a>
+                <a href="shop.html">Jewelry</a>
+                <a href="shop.html">Accessories</a>
+                <a href="shop.html">Gift Cards</a>
+                <a href="shop.html" class="sec-nav-prime">✦ ARNiya Prime</a>
+            </div>
+        </header>
+
+        <!-- Support Popup Modal -->
+        <div id="support-overlay" class="support-overlay" onclick="closeSupportPopup()"></div>
+        <div id="support-popup" class="support-popup">
+            <div class="support-popup-header">
+                <div class="support-popup-icon">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <div>
+                    <h3>Support Center</h3>
+                    <p>We're online &amp; ready to help</p>
+                </div>
+                <button class="close-btn-styled" onclick="closeSupportPopup()" aria-label="Close Support"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="support-popup-status">
+                <span class="status-dot"></span> Available 24/7 · Avg. response &lt; 2 min
+            </div>
+            <div class="support-popup-actions">
+                <a href="https://wa.me/919876543210" class="support-action-btn whatsapp-btn">
+                    <div class="s-btn-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                    <div class="s-btn-text">
+                        <span class="s-btn-title">Chat on WhatsApp</span>
+                        <span class="s-btn-sub">Instant reply guaranteed</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right s-arrow"></i>
+                </a>
+                <a href="tel:+919876543210" class="support-action-btn call-btn">
+                    <div class="s-btn-icon"><i class="fa-solid fa-phone"></i></div>
+                    <div class="s-btn-text">
+                        <span class="s-btn-title">Call Us Now</span>
+                        <span class="s-btn-sub">+91 98765 43210</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right s-arrow"></i>
+                </a>
+            </div>
+            <div class="support-popup-footer">
+                <i class="fa-solid fa-shield-halved"></i> Your privacy is protected
+            </div>
+        </div>
+
+        <!-- Drawers -->
+        <div class="overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+        <div id="menu-drawer" class="drawer-left">
+            <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <i class="fa-solid fa-circle-user fa-2x" style="color:var(--text-secondary)"></i>
+                    <h2 id="guest-greeting" style="font-weight:600;">Hello, Guest</h2>
+                </div>
+                <button class="close-btn-styled" onclick="toggleMenu()" aria-label="Close Menu"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body">
+                <ul class="menu-list">
+                    <li class="menu-title" style="margin-top: 10px;">Trending</li>
+                    <li class="menu-link" onclick="window.location.href='shop.html'"><div class="m-left"><i class="fa-solid fa-fire"></i> Best Sellers</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-link" onclick="window.location.href='shop.html'"><div class="m-left"><i class="fa-solid fa-bolt"></i> New Releases</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-title">Shop by Category</li>
+                    <li class="menu-link" onclick="window.location.href='shop.html'"><div class="m-left"><i class="fa-regular fa-clock"></i> Watches</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-link" onclick="window.location.href='shop.html'"><div class="m-left"><i class="fa-regular fa-gem"></i> Jewelry</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-link" onclick="window.location.href='shop.html'"><div class="m-left"><i class="fa-solid fa-glasses"></i> Accessories</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-title">Account</li>
+                    <li class="menu-link" onclick="handleAccountClick()"><div class="m-left"><i class="fa-regular fa-user"></i> Your Account</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-link" onclick="handleAccountClick()"><div class="m-left"><i class="fa-solid fa-box-open"></i> Your Orders</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                    <li class="menu-link" onclick="openRightDrawer('wishlist')"><div class="m-left"><i class="fa-regular fa-heart"></i> Wishlist</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                </ul>
+                <div class="drawer-footer-menu">
+                    <p class="drawer-f-title">Support & Info</p>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms & Conditions</a>
+                    <a href="#">About ARNiya</a>
+                    <a href="mailto:support@arniyahub.com"><i class="fa-solid fa-envelope" style="margin-right:8px;"></i>support@arniyahub.com</a>
+                    
+                    <div class="drawer-socials">
+                        <i class="fa-brands fa-instagram"></i>
+                        <i class="fa-brands fa-facebook-f"></i>
+                        <i class="fa-brands fa-twitter"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay" id="right-overlay" onclick="closeRightDrawer()"></div>
+        <div id="right-drawer" class="drawer-right">
+            <div class="drawer-header-right">
+                <h3 id="drawer-title" style="font-size: 18px;">Drawer</h3>
+                <button class="close-btn-styled" onclick="closeRightDrawer()" aria-label="Close Drawer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="drawer-content" class="drawer-body"></div>
+        </div>
+
+        <!-- Video Reel Viewer -->
+        <div id="video-reel-viewer">
+            <button class="close-reel" onclick="closeReel()" aria-label="Close Reel"><i class="fa-solid fa-xmark"></i></button>
+            <div class="reel-scroll-container">
+                <div class="reel-item">
+                    <div class="reel-item-bg" style="background-image: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80')">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                </div>
+                <div class="reel-item">
+                    <div class="reel-item-bg" style="background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f7f2b1d6?w=600&q=80')">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="scroll-area flex-column">
+            
+            <!-- Section 1: Hero Slider -->
+            <div class="hero-slider" id="heroSlider">
+
+                <!-- Slide 1 -->
+                <div class="slide bg-img active" style="background-image: url('https://images.unsplash.com/photo-1617305988165-27f940898eb2?auto=format&fit=crop&w=1200&q=80')">
+                    <div class="slide-badge">🔥 Limited Edition</div>
+                    <div class="slide-content">
+                        <span class="slide-tag">New Collection</span>
+                        <h2>The Obsidian<br>Collection</h2>
+                        <p>Luxury redefined. Crafted for the few.</p>
+                        <div class="slide-actions">
+                            <a href="shop.html"><button class="gold-btn">Shop Now</button></a>
+                            <a href="shop.html"><button class="slide-ghost-btn">Explore All</button></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="slide bg-img" style="background-image: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80')">
+                    <div class="slide-badge">⭐ Best Seller</div>
+                    <div class="slide-content">
+                        <span class="slide-tag">Watches</span>
+                        <h2>Gold Chronograph<br>Edition</h2>
+                        <p>Timeless precision. Pure gold finish.</p>
+                        <div class="slide-actions">
+                            <a href="product.html?id=1"><button class="gold-btn">View Details</button></a>
+                            <a href="shop.html"><button class="slide-ghost-btn">Browse More</button></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="slide bg-img" style="background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f7f2b1d6?auto=format&fit=crop&w=1200&q=80')">
+                    <div class="slide-badge">💎 Premium Pick</div>
+                    <div class="slide-content">
+                        <span class="slide-tag">Jewelry</span>
+                        <h2>Signature Platinum<br>Ring</h2>
+                        <p>Wear your story. Own the moment.</p>
+                        <div class="slide-actions">
+                            <a href="product.html?id=2"><button class="gold-btn">Shop Now</button></a>
+                            <a href="shop.html"><button class="slide-ghost-btn">View Collection</button></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide Progress Bar -->
+                <div class="slide-progress"><div class="slide-progress-bar" id="slideProgressBar"></div></div>
+            </div>
+
+            <!-- Section 2: Categories -->
+            <div class="cat-section">
+                <div class="cat-section-header">
+                    <div class="cat-sec-left">
+                        <span class="cat-sec-icon"><i class="fa-solid fa-layer-group"></i></span>
+                        <h3>Shop by Category</h3>
+                    </div>
+                    <a href="shop.html" class="cat-view-all">View All <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="category-slider">
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap">
+                            <div class="cat-icon bg-img" style="background-image: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&q=80')"></div>
+                            <span class="cat-emoji">⌚</span>
+                        </div>
+                        <span class="cat-label">Watches</span>
+                    </a>
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap">
+                            <div class="cat-icon bg-img" style="background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f7f2b1d6?w=200&q=80')"></div>
+                            <span class="cat-emoji">💍</span>
+                        </div>
+                        <span class="cat-label">Jewelry</span>
+                    </a>
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap">
+                            <div class="cat-icon bg-img" style="background-image: url('https://images.unsplash.com/photo-1623998021446-45cb9c278bc3?w=200&q=80')"></div>
+                            <span class="cat-emoji">🕶</span>
+                        </div>
+                        <span class="cat-label">Accessories</span>
+                    </a>
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap">
+                            <div class="cat-icon bg-img" style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?w=200&q=80')"></div>
+                            <span class="cat-emoji">🌸</span>
+                        </div>
+                        <span class="cat-label">Perfumes</span>
+                    </a>
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap">
+                            <div class="cat-icon bg-img" style="background-image: url('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&q=80')"></div>
+                            <span class="cat-emoji">👜</span>
+                        </div>
+                        <span class="cat-label">Bags</span>
+                    </a>
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap cat-icon-wrap--sale">
+                            <div class="cat-icon" style="background: linear-gradient(135deg,#cf6679,#8c1c30); display:flex; align-items:center; justify-content:center; font-size:22px;">🔥</div>
+                            <span class="cat-badge-sale">HOT</span>
+                        </div>
+                        <span class="cat-label" style="color:var(--danger);">Sale</span>
+                    </a>
+
+                    <a href="shop.html" class="cat-item">
+                        <div class="cat-icon-wrap">
+                            <div class="cat-icon" style="background: var(--gold-gradient); display:flex; align-items:center; justify-content:center; font-size:22px;">✦</div>
+                        </div>
+                        <span class="cat-label">All Items</span>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Section 3: Top Trending -->
+            <div class="section-container trend-section">
+                <div class="trend-heading-bg">
+                    <div class="trend-heading-left">
+                        <div class="trend-icon-wrap">
+                            <i class="fa-solid fa-fire trend-icon-fire"></i>
+                        </div>
+                        <div class="trend-title-wrap">
+                            <h3 class="trend-main-title">Top <span class="trend-title-gold">Trending</span></h3>
+                            <p class="trend-subtitle">Most loved picks this week</p>
+                        </div>
+                    </div>
+                    <div class="trend-heading-right">
+                        <span class="trend-live-badge"><span class="trend-live-dot"></span> LIVE</span>
+                        <a href="shop.html" class="section-see-all">See All <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="horizontal-scroll trending-scroll">
+
+                    <!-- Card 1 -->
+                    <a href="product.html?id=1" class="trend-card">
+                        <div class="trend-img-wrap">
+                            <div class="trend-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80')"></div>
+                            <span class="trend-badge hot">🔥 Hot</span>
+                            <div class="trend-rating-pill"><i class="fa-solid fa-star"></i> 4.9 &middot; 2.1k</div>
+                            <button class="trend-fav" aria-label="Add to Favorites" data-product-id="1"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                        <div class="trend-info">
+                            <p class="trend-name">Gold Chronograph Watch</p>
+                            <div class="trend-meta-row">
+                                <span class="trend-sku">ARN-001</span>
+                                <span class="trend-clr-count">8 Colours</span>
+                            </div>
+                            <div class="trend-sizes">
+                                <span class="t-size">M</span>
+                                <span class="t-size">L</span>
+                                <span class="t-size">XL</span>
+                                <span class="t-size">XXL</span>
+                            </div>
+                            <div class="trend-price-row">
+                                <span class="trend-price"><span class="trend-curr">₹</span>2,499</span>
+                                <span class="trend-disc"><i class="fa-solid fa-arrow-trend-down"></i> 19% off</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 2 -->
+                    <a href="product.html?id=2" class="trend-card">
+                        <div class="trend-img-wrap">
+                            <div class="trend-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f7f2b1d6?w=400&q=80')"></div>
+                            <span class="trend-badge new">✨ New</span>
+                            <div class="trend-rating-pill"><i class="fa-solid fa-star"></i> 4.8 &middot; 1.4k</div>
+                            <button class="trend-fav" aria-label="Add to Favorites" data-product-id="2"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                        <div class="trend-info">
+                            <p class="trend-name">Platinum Ring</p>
+                            <div class="trend-meta-row">
+                                <span class="trend-sku">ARN-012</span>
+                                <span class="trend-clr-count">3 Colours</span>
+                            </div>
+                            <div class="trend-sizes">
+                                <span class="t-size">M</span>
+                                <span class="t-size">L</span>
+                                <span class="t-size">XL</span>
+                                <span class="t-size">XXL</span>
+                            </div>
+                            <div class="trend-price-row">
+                                <span class="trend-price"><span class="trend-curr">₹</span>1,850</span>
+                                <span class="trend-disc"><i class="fa-solid fa-arrow-trend-down"></i> 16% off</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 3 -->
+                    <a href="product.html?id=3" class="trend-card">
+                        <div class="trend-img-wrap">
+                            <div class="trend-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1623998021446-45cb9c278bc3?w=400&q=80')"></div>
+                            <div class="trend-rating-pill"><i class="fa-solid fa-star"></i> 4.7 &middot; 980</div>
+                            <button class="trend-fav" aria-label="Add to Favorites" data-product-id="3"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                        <div class="trend-info">
+                            <p class="trend-name">Noir Sunglasses</p>
+                            <div class="trend-meta-row">
+                                <span class="trend-sku">ARN-023</span>
+                                <span class="trend-clr-count">9 Colours</span>
+                            </div>
+                            <div class="trend-sizes">
+                                <span class="t-size">M</span>
+                                <span class="t-size">L</span>
+                                <span class="t-size">XL</span>
+                                <span class="t-size">XXL</span>
+                            </div>
+                            <div class="trend-price-row">
+                                <span class="trend-price"><span class="trend-curr">₹</span>350</span>
+                                <span class="trend-disc"><i class="fa-solid fa-arrow-trend-down"></i> 17% off</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 4 -->
+                    <a href="product.html?id=4" class="trend-card">
+                        <div class="trend-img-wrap">
+                            <div class="trend-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80')"></div>
+                            <span class="trend-badge sale">🏷 Sale</span>
+                            <div class="trend-rating-pill"><i class="fa-solid fa-star"></i> 4.6 &middot; 730</div>
+                            <button class="trend-fav" aria-label="Add to Favorites" data-product-id="4"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                        <div class="trend-info">
+                            <p class="trend-name">Rose Oud Perfume</p>
+                            <div class="trend-meta-row">
+                                <span class="trend-sku">ARN-034</span>
+                                <span class="trend-clr-count">6 Colours</span>
+                            </div>
+                            <div class="trend-sizes">
+                                <span class="t-size">M</span>
+                                <span class="t-size">L</span>
+                                <span class="t-size">XL</span>
+                                <span class="t-size">XXL</span>
+                            </div>
+                            <div class="trend-price-row">
+                                <span class="trend-price"><span class="trend-curr">₹</span>180</span>
+                                <span class="trend-disc"><i class="fa-solid fa-arrow-trend-down"></i> 25% off</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 5 -->
+                    <a href="product.html?id=5" class="trend-card">
+                        <div class="trend-img-wrap">
+                            <div class="trend-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80')"></div>
+                            <div class="trend-rating-pill"><i class="fa-solid fa-star"></i> 4.8 &middot; 560</div>
+                            <button class="trend-fav" aria-label="Add to Favorites" data-product-id="5"><i class="fa-regular fa-heart"></i></button>
+                        </div>
+                        <div class="trend-info">
+                            <p class="trend-name">Gold Chain Necklace</p>
+                            <div class="trend-meta-row">
+                                <span class="trend-sku">ARN-045</span>
+                                <span class="trend-clr-count">7 Colours</span>
+                            </div>
+                            <div class="trend-sizes">
+                                <span class="t-size">M</span>
+                                <span class="t-size">L</span>
+                                <span class="t-size">XL</span>
+                                <span class="t-size">XXL</span>
+                            </div>
+                            <div class="trend-price-row">
+                                <span class="trend-price"><span class="trend-curr">₹</span>900</span>
+                                <span class="trend-disc"><i class="fa-solid fa-arrow-trend-down"></i> 18% off</span>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- ── Promo Sliding Banner ── -->
+
+            <div class="promo-banner-wrap">
+                <div class="promo-slider" id="promoSlider">
+
+                    <!-- Slide 1 -->
+                    <a href="shop.html" class="promo-slide" aria-label="Promo Slide">
+                        <div class="promo-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=900&q=85')"></div>
+                    </a>
+
+                    <!-- Slide 2 -->
+                    <a href="shop.html" class="promo-slide" aria-label="Promo Slide">
+                        <div class="promo-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=900&q=85')"></div>
+                    </a>
+
+                    <!-- Slide 3 -->
+                    <a href="shop.html" class="promo-slide" aria-label="Promo Slide">
+                        <div class="promo-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?w=900&q=85')"></div>
+                    </a>
+
+                </div>
+            </div>
+
+
+            <!-- Section 4: Featured Products -->
+            <div class="section-container feat-section dark-bg-block">
+                <div class="feat-heading-bg">
+                    <div class="feat-heading-left">
+                        <div class="feat-icon-wrap">
+                            <i class="fa-solid fa-gem feat-icon-gem"></i>
+                        </div>
+                        <div class="feat-title-wrap">
+                            <h3 class="feat-main-title">Featured <span class="feat-title-shine">Selection</span></h3>
+                            <p class="feat-subtitle">Handpicked luxury essentials</p>
+                        </div>
+                    </div>
+                    <div class="feat-heading-right">
+                        <span class="feat-count-badge"><i class="fa-solid fa-layer-group"></i> 5 Items</span>
+                        <a href="shop.html" class="section-see-all">See All <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="horizontal-scroll feat-scroll">
+
+                    <a href="product.html?id=5" class="feat-card">
+                        <div class="feat-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80')">
+                            <span class="feat-badge">🔥 Hot</span>
+                            <div class="feat-price-tag">
+                                <span class="feat-tag-hole"></span>
+                                <span class="feat-tag-curr">₹</span>
+                                <span class="feat-tag-num">900</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="product.html?id=6" class="feat-card">
+                        <div class="feat-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1617228834458-1547cf2b4bc3?w=400&q=80')">
+                            <span class="feat-badge new">✨ New</span>
+                            <div class="feat-price-tag">
+                                <span class="feat-tag-hole"></span>
+                                <span class="feat-tag-curr">₹</span>
+                                <span class="feat-tag-num">250</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="product.html?id=11" class="feat-card">
+                        <div class="feat-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1601158935942-5225d2826af1?w=400&q=80')">
+                            <div class="feat-price-tag">
+                                <span class="feat-tag-hole"></span>
+                                <span class="feat-tag-curr">₹</span>
+                                <span class="feat-tag-num">1,100</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="product.html?id=8" class="feat-card">
+                        <div class="feat-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1588661132646-77871b782974?w=400&q=80')">
+                            <span class="feat-badge sale">🏷 Sale</span>
+                            <div class="feat-price-tag">
+                                <span class="feat-tag-hole"></span>
+                                <span class="feat-tag-curr">₹</span>
+                                <span class="feat-tag-num">450</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="product.html?id=10" class="feat-card">
+                        <div class="feat-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80')">
+                            <div class="feat-price-tag">
+                                <span class="feat-tag-hole"></span>
+                                <span class="feat-tag-curr">₹</span>
+                                <span class="feat-tag-num">3,200</span>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Section 5: New Arrivals -->
+            <div class="section-container na-section">
+
+                <!-- Premium Heading -->
+                <div class="na-heading-bg">
+                    <div class="na-heading-left">
+                        <div class="na-icon-wrap">
+                            <i class="fa-solid fa-star-of-life na-icon"></i>
+                        </div>
+                        <div class="na-title-wrap">
+                            <h3 class="na-main-title">New <span class="na-title-shine">Arrivals</span></h3>
+                            <p class="na-subtitle">Fresh drops — just landed</p>
+                        </div>
+                    </div>
+                    <div class="na-heading-right">
+                        <span class="na-new-badge">✦ NEW</span>
+                        <a href="shop.html" class="section-see-all">See All <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <!-- Editorial Grid: 1 tall left + 2×2 right -->
+                <div class="na-grid">
+
+                    <a href="product.html?id=1" class="na-card na-card-tall">
+                        <div class="na-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=85')"></div>
+                        <div class="na-price-tag"><span class="na-tag-curr">₹</span><span class="na-tag-num">2,499</span></div>
+                    </a>
+
+                    <a href="product.html?id=2" class="na-card">
+                        <div class="na-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1599643478524-fb66f7f2b1d6?w=400&q=80')"></div>
+                        <span class="na-card-badge">New</span>
+                        <div class="na-price-tag"><span class="na-tag-curr">₹</span><span class="na-tag-num">1,850</span></div>
+                    </a>
+
+                    <a href="product.html?id=9" class="na-card">
+                        <div class="na-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=80')"></div>
+                        <div class="na-price-tag"><span class="na-tag-curr">₹</span><span class="na-tag-num">4,200</span></div>
+                    </a>
+
+                    <a href="product.html?id=3" class="na-card">
+                        <div class="na-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1623998021446-45cb9c278bc3?w=400&q=80')"></div>
+                        <span class="na-card-badge sale">Sale</span>
+                        <div class="na-price-tag"><span class="na-tag-curr">₹</span><span class="na-tag-num">320</span></div>
+                    </a>
+
+                    <a href="product.html?id=4" class="na-card">
+                        <div class="na-photo bg-img" style="background-image:url('https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&q=80')"></div>
+                        <div class="na-price-tag"><span class="na-tag-curr">₹</span><span class="na-tag-num">4,100</span></div>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Section 6: Signature Brand Banner -->
+            <div class="sig-banner-wrap">
+                <div class="sig-banner bg-img" style="background-image: url('https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=1000&q=85')">
+                    <div class="sig-overlay">
+                        <div class="sig-glass-box">
+                            <span class="sig-eyebrow">The Heritage Collection</span>
+                            <h2 class="sig-title">Arniya <span class="sig-title-gold">Signature</span></h2>
+                            <p class="sig-desc">Experience true craftsmanship &amp; unparalleled luxury</p>
+                            <a href="shop.html" class="sig-btn">
+                                <span>Explore Luxury</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 7: Watch & Shop Reels -->
+            <div class="section-container reels-section">
+                <!-- Premium Heading -->
+                <div class="feat-heading-bg reels-heading">
+                    <div class="feat-heading-left">
+                        <div class="feat-icon-wrap" style="background: linear-gradient(135deg, rgba(230,0,80,0.2), rgba(0,0,0,0)); border-color: rgba(230,0,80,0.4);">
+                            <i class="fa-solid fa-play feat-icon-gem" style="color: #ff0050; animation: pulse 2s infinite;"></i>
+                        </div>
+                        <div class="feat-title-wrap">
+                            <h3 class="feat-main-title">Watch &amp; <span style="color:#ff0050;">Shop</span></h3>
+                            <p class="feat-subtitle">Trending product reels</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reels-scroll">
+                    <!-- Reel 1 -->
+                    <div class="reel-card bg-img" style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=700&fit=crop')" onclick="openReel()">
+                        <div class="reel-actions">
+                            <div class="reel-views"><i class="fa-solid fa-play"></i> 124K</div>
+                        </div>
+                        <div class="reel-overlay"></div>
+                        <div class="feat-price-tag"><span class="feat-tag-curr">₹</span><span class="feat-tag-num">4,100</span></div>
+                        <div class="reel-play-btn"><i class="fa-solid fa-play"></i></div>
+                    </div>
+
+                    <!-- Reel 2 -->
+                    <div class="reel-card bg-img" style="background-image: url('https://images.unsplash.com/photo-1623998021446-45cb9c278bc3?w=400&h=700&fit=crop')" onclick="openReel()">
+                        <div class="reel-actions">
+                            <div class="reel-views"><i class="fa-solid fa-play"></i> 89K</div>
+                        </div>
+                        <div class="reel-overlay"></div>
+                        <div class="feat-price-tag"><span class="feat-tag-curr">₹</span><span class="feat-tag-num">320</span></div>
+                        <div class="reel-play-btn"><i class="fa-solid fa-play"></i></div>
+                    </div>
+
+                    <!-- Reel 3 -->
+                    <div class="reel-card bg-img" style="background-image: url('https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&h=700&fit=crop')" onclick="openReel()">
+                        <div class="reel-actions">
+                            <div class="reel-views"><i class="fa-solid fa-play"></i> 210K</div>
+                        </div>
+                        <div class="reel-overlay"></div>
+                        <div class="feat-price-tag"><span class="feat-tag-curr">₹</span><span class="feat-tag-num">4,200</span></div>
+                        <div class="reel-play-btn"><i class="fa-solid fa-play"></i></div>
+                    </div>
+
+                    <!-- Reel 4 -->
+                    <div class="reel-card bg-img" style="background-image: url('https://images.unsplash.com/photo-1599643478524-fb66f7f2b1d6?w=400&h=700&fit=crop')" onclick="openReel()">
+                        <div class="reel-actions">
+                            <div class="reel-views"><i class="fa-solid fa-play"></i> 55K</div>
+                        </div>
+                        <div class="reel-overlay"></div>
+                        <div class="feat-price-tag"><span class="feat-tag-curr">₹</span><span class="feat-tag-num">1,850</span></div>
+                        <div class="reel-play-btn"><i class="fa-solid fa-play"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 8: Customer Reviews -->
+            <div class="section-container">
+                <div class="feat-heading-bg" style="margin-bottom:16px; border:none; padding: 0 16px;">
+                    <div class="feat-heading-left">
+                        <div class="feat-title-wrap">
+                            <h3 class="feat-main-title">Inner <span style="color:var(--gold-primary);">Circle</span></h3>
+                            <p class="feat-subtitle">What our elite clients say</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reviews-marquee-wrap">
+                    <div class="reviews-marquee-track">
+                        <!-- Review 1 -->
+                        <div class="premium-review-card">
+                            <div class="pr-stars">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                            <p class="pr-text">"The gold chronograph is absolutely stunning. Perfect premium feel. It completely exceeded my expectations."</p>
+                            <div class="pr-user">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" class="pr-avatar" alt="User">
+                                <div class="pr-details">
+                                    <span class="pr-name">James R.</span>
+                                    <span class="pr-verified"><i class="fa-solid fa-circle-check" style="color: #28c066;"></i> Verified Buyer</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review 2 -->
+                        <div class="premium-review-card">
+                            <div class="pr-stars">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                            <p class="pr-text">"Incredible quality and fast shipping. The packaging itself feels like a true luxury experience. Highly recommended."</p>
+                            <div class="pr-user">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" class="pr-avatar" alt="User">
+                                <div class="pr-details">
+                                    <span class="pr-name">Sarah M.</span>
+                                    <span class="pr-verified"><i class="fa-solid fa-circle-check" style="color: #28c066;"></i> Verified Buyer</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review 1 (Copy for loop) -->
+                        <div class="premium-review-card">
+                            <div class="pr-stars">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                            <p class="pr-text">"The gold chronograph is absolutely stunning. Perfect premium feel. It completely exceeded my expectations."</p>
+                            <div class="pr-user">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" class="pr-avatar" alt="User">
+                                <div class="pr-details">
+                                    <span class="pr-name">James R.</span>
+                                    <span class="pr-verified"><i class="fa-solid fa-circle-check" style="color: #28c066;"></i> Verified Buyer</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review 2 (Copy for loop) -->
+                        <div class="premium-review-card">
+                            <div class="pr-stars">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                            <p class="pr-text">"Incredible quality and fast shipping. The packaging itself feels like a true luxury experience. Highly recommended."</p>
+                            <div class="pr-user">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" class="pr-avatar" alt="User">
+                                <div class="pr-details">
+                                    <span class="pr-name">Sarah M.</span>
+                                    <span class="pr-verified"><i class="fa-solid fa-circle-check" style="color: #28c066;"></i> Verified Buyer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 8.5: Trust Promise -->
+            <div class="section-container" style="margin-bottom: 30px;">
+                <div class="feat-heading-bg" style="margin-bottom:16px; border:none; padding: 0 16px;">
+                    <div class="feat-heading-left" style="width: 100%; justify-content: center;">
+                        <div class="feat-icon-wrap" style="background: rgba(212,175,55,0.1); border-color: rgba(212,175,55,0.3); width: 36px; height: 36px; flex-shrink: 0;">
+                            <i class="fa-solid fa-handshake" style="color: var(--gold-primary); font-size: 16px; animation: pulse 2s infinite;"></i>
+                        </div>
+                        <div class="feat-title-wrap">
+                            <h3 class="feat-main-title">Arniya <span style="color:var(--gold-primary);">Promise</span></h3>
+                            <p class="feat-subtitle">Why thousands choose us</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trust-grid">
+                    <div class="trust-item">
+                        <div class="trust-icon-box"><i class="fa-solid fa-truck-fast"></i></div>
+                        <h4>Fast Delivery</h4>
+                        <p>Express global shipping</p>
+                    </div>
+                    <div class="trust-item">
+                        <div class="trust-icon-box"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <h4>Full Stock</h4>
+                        <p>Immediate availability</p>
+                    </div>
+                    <div class="trust-item">
+                        <div class="trust-icon-box"><i class="fa-solid fa-gem"></i></div>
+                        <h4>Premium Quality</h4>
+                        <p>Authentic craftsmanship</p>
+                    </div>
+                    <div class="trust-item">
+                        <div class="trust-icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h4>Secure Payment</h4>
+                        <p>100% safe checkout</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 9: Footer -->
+            <footer class="premium-footer">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <h2 class="footer-logo-premium">Arniya<span style="color: var(--gold-primary);">Hub</span></h2>
+                        <p class="footer-tagline">Designed for Luxury. Crafted for You.</p>
+                    </div>
+                </div>
+
+                <div class="footer-links-grid">
+                    <div class="footer-col">
+                        <h4>Explore</h4>
+                        <a href="#">New Arrivals</a>
+                        <a href="#">Signature Collection</a>
+                        <a href="#">Trending Reels</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Assistance</h4>
+                        <a href="#">Track Order</a>
+                        <a href="#">Returns &amp; Policy</a>
+                        <a href="#">Concierge</a>
+                    </div>
+                </div>
+
+                <div class="footer-socials">
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                </div>
+
+                <div class="footer-bottom">
+                    <div class="footer-legal">
+                        <a href="#">Privacy Policy</a>
+                        <span class="dot-separator">•</span>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                    <p class="copyright-text">© 2026 Arniya Smart Hub. All rights reserved.</p>
+                </div>
+            </footer>
+            
+            <div class="pb-100"></div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item active">
+                <i class="fa-solid fa-house"></i><span>Home</span>
+            </a>
+            <div class="nav-item" onclick="openRightDrawer('wishlist')">
+                <i class="fa-regular fa-heart"></i><span>Wishlist</span>
+            </div>
+            <a href="shop.html" class="nav-item center-hex" aria-label="Shop">
+                <div class="hex-bg"><i class="fa-solid fa-gem"></i></div>
+            </a>
+            <div class="nav-item" onclick="openRightDrawer('cart')">
+                <div class="icon-badge-wrapper">
+                    <i class="fa-solid fa-bag-shopping"></i><span class="cart-badge" id="&">0</span>
+                </div>
+                <span>Cart</span>
+            </div>
+            <div class="nav-item" onclick="handleAccountClick()">
+                <i class="fa-regular fa-user"></i><span>Account</span>
+            </div>
+        </nav>
+    </div>
+    <script src="assets/js/mockData.js?v=2"></script>
+    <script src="assets/js/global.js?v=2"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let loggedIn = localStorage.getItem('isLoggedIn');
+            if(loggedIn === 'true') document.getElementById('guest-greeting').innerText = "Arniya Member";
+        });
+
+        // ── Hero Slider Controller ──
+        let heroIndex = 0;
+
+        function heroGoTo(n) {
+            const slides = document.querySelectorAll('#heroSlider .slide');
+            if(slides.length === 0) return;
+            slides[heroIndex].classList.remove('active');
+            heroIndex = (n + slides.length) % slides.length;
+            slides[heroIndex].classList.add('active');
+        }
+
+        function heroSlide(dir) { 
+            heroGoTo(heroIndex + dir); 
+        }
+    </script>
+</body>
+</html>

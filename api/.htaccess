@@ -1,0 +1,14 @@
+# Protect API directory
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "https://desivastra.in"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+</IfModule>
+
+# Block direct access to config
+<FilesMatch "\.(env|sql|log)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+Options -Indexes

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Browse our complete collection of luxury watches, jewelry, accessories, and perfumes at DesiVastra.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop All Products - DesiVastra | Luxury Fashion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/global.css?v=2">
+    <link rel="stylesheet" href="assets/css/shop.css?v=2">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <div class="app-container">
+        
+        <header class="global-header">
+            <div class="header-inner">
+                <div class="header-left header-left-flex">
+                    <a href="index.html" class="icon-btn mobile-only" title="Back to Home" aria-label="Back to Home"><i class="fa-solid fa-arrow-left"></i></a>
+                    
+                    <!-- Integrated Mobile Search -->
+                    <div class="search-bar mobile-only search-bar-shop">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="shop-search-input-mobile" placeholder="Search Products">
+                        <i class="fa-solid fa-camera search-cam-icon" id="lens-trigger-btn" onclick="openLens()" role="button" tabindex="0" title="Search by photo" aria-label="Visual search by photo"></i>
+                    </div>
+
+                    <a href="index.html" class="logo desktop-only">Arniya<span class="gold">Hub</span></a>
+                </div>
+
+                <!-- Desktop Amazon Search -->
+                <div class="desktop-search">
+                    <input type="text" id="shop-search-input-desktop" placeholder="Search for luxury items...">
+                    <button id="shop-search-btn-desktop" title="Search" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                
+                <div class="header-right">
+                    <!-- Desktop Nav -->
+                    <div class="desktop-nav-items">
+                        <div class="d-nav-item" onclick="handleAccountClick()">
+                            <span class="small">Hello, sign in</span>
+                            <span class="bold">Account & Lists</span>
+                        </div>
+                        <div class="d-nav-item">
+                            <span class="small">Returns</span>
+                            <span class="bold">& Orders</span>
+                        </div>
+                        <div class="d-nav-item cart-btn" onclick="openRightDrawer('cart')">
+                            <span class="cart-badge" id="&">0</span>
+                            <i class="fa-solid fa-cart-shopping fa-2x"></i>
+                            <span class="bold cart-label">Cart</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Amazon Style Secondary Bar for Desktop -->
+            <div class="desktop-secondary-nav">
+                <div class="m-all" onclick="window.location.href='index.html'"><i class="fa-solid fa-bars"></i> All</div>
+                <a href="shop.html">Today's Deals</a>
+                <a href="shop.html">Customer Service</a>
+                <a href="shop.html">Registry</a>
+                <a href="shop.html">Gift Cards</a>
+                <a href="shop.html">Sell</a>
+            </div>
+        </header>
+
+        <div class="overlay" id="right-overlay" onclick="closeRightDrawer()"></div>
+        <div id="right-drawer" class="drawer-right">
+            <div class="drawer-header-right">
+                <h3 id="drawer-title" class="drawer-title-text">Drawer</h3>
+                <button class="close-btn-styled" onclick="closeRightDrawer()" title="Close" aria-label="Close drawer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="drawer-content" class="drawer-body"></div>
+        </div>
+
+        <main class="scroll-area flex-column">
+            <div class="shop-category-bar">
+                <div class="shop-cat active" onclick="filterCat(this)">All</div>
+                <div class="shop-cat" onclick="filterCat(this)">Watches</div>
+                <div class="shop-cat" onclick="filterCat(this)">Jewelry</div>
+                <div class="shop-cat" onclick="filterCat(this)">Accessories</div>
+                <div class="shop-cat" onclick="filterCat(this)">Bags</div>
+                <div class="shop-cat" onclick="filterCat(this)">Perfumes</div>
+            </div>
+
+            <div class="product-grid" id="main-product-grid">
+                <!-- Injected via shop.js -->
+            </div>
+            
+            <div class="loader-spinner">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+            </div>
+            <div class="pb-100"></div>
+        </main>
+
+        <div class="shop-actions-bar">
+            <button class="action-btn" onclick="openSort()"><i class="fa-solid fa-arrow-up-wide-short"></i> Sort By</button>
+            <div class="divider-y"></div>
+            <button class="action-btn" onclick="openFilter()"><i class="fa-solid fa-filter"></i> Filter</button>
+        </div>
+
+        <!-- Sort Side Drawer (Bottom Sheet) -->
+        <div class="drawer-bottom" id="sort-drawer">
+            <div class="pop-header">
+                <h3>Sort Products</h3>
+                <button class="pop-close" onclick="closeSort()" title="Close sort" aria-label="Close sort panel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="pop-option" onclick="selectSort(this)">
+                <span>Price: Low to High</span>
+                <i class="fa-solid fa-arrow-down-short-wide"></i>
+            </div>
+            <div class="pop-option" onclick="selectSort(this)">
+                <span>Price: High to Low</span>
+                <i class="fa-solid fa-arrow-up-wide-short"></i>
+            </div>
+            <div class="pop-option active" onclick="selectSort(this)">
+                <span>Most Popular</span>
+                <i class="fa-solid fa-fire-flame-curved"></i>
+            </div>
+            <div class="pop-option" onclick="selectSort(this)">
+                <span>New Arrivals</span>
+                <i class="fa-solid fa-certificate"></i>
+            </div>
+        </div>
+
+        <!-- Filter Side Drawer (Full Height Myntra Style) -->
+        <div class="drawer-bottom filter-full" id="filter-drawer">
+            <div class="pop-header px-20">
+                <h3>Filters</h3>
+                <button class="pop-close" onclick="closeFilter()" title="Close filters" aria-label="Close filter panel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="filter-body-wrapper">
+                <!-- Sidebar -->
+                <div class="filter-sidebar">
+                    <div class="side-tab active" data-tab="price-tab">Price</div>
+                    <div class="side-tab" data-tab="cat-tab">Category</div>
+                    <div class="side-tab" data-tab="status-tab">Status</div>
+                    <div class="side-tab" data-tab="size-tab">Sizes</div>
+                </div>
+
+                <!-- Main Content Pane -->
+                <div class="filter-content-pane">
+                    <!-- Price Tab -->
+                    <div id="price-tab" class="f-pane active">
+                        <div class="filter-label">Set Price Range</div>
+                        <div class="price-readout">₹0 - ₹<span id="price-val-2">5,000</span></div>
+                        <label for="price-range-slider" class="sr-only">Price Range</label>
+                        <input type="range" id="price-range-slider" class="price-slider" min="0" max="5000" value="5000" step="100" aria-label="Price range" title="Set maximum price" oninput="document.getElementById('price-val-2').innerText = this.value">
+                        <div class="p-range-labels">
+                            <span>₹0</span>
+                            <span>₹5,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Category Tab -->
+                    <div id="cat-tab" class="f-pane">
+                        <div class="pop-option" onclick="this.classList.toggle('active')">Watches</div>
+                        <div class="pop-option" onclick="this.classList.toggle('active')">Jewelry</div>
+                        <div class="pop-option" onclick="this.classList.toggle('active')">Accessories</div>
+                        <div class="pop-option" onclick="this.classList.toggle('active')">Bags</div>
+                        <div class="pop-option" onclick="this.classList.toggle('active')">Perfumes</div>
+                    </div>
+
+                    <!-- Sizes Tab -->
+                    <div id="size-tab" class="f-pane">
+                        <div class="filter-label">Available Sizes</div>
+                        <div class="size-grid">
+                            <div class="size-box" onclick="this.classList.toggle('active')">38mm</div>
+                            <div class="size-box active" onclick="this.classList.toggle('active')">42mm</div>
+                            <div class="size-box" onclick="this.classList.toggle('active')">Small</div>
+                            <div class="size-box" onclick="this.classList.toggle('active')">Medium</div>
+                            <div class="size-box" onclick="this.classList.toggle('active')">Large</div>
+                        </div>
+                    </div>
+
+                    <!-- Status Tab -->
+                    <div id="status-tab" class="f-pane">
+                        <label class="check-row">
+                            <span>Top Selling</span>
+                            <input type="checkbox">
+                        </label>
+                        <label class="check-row">
+                            <span>New Arrivals</span>
+                            <input type="checkbox" checked>
+                        </label>
+                        <label class="check-row">
+                            <span>Boutique Only</span>
+                            <input type="checkbox">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-footer">
+                <button class="f-footer-btn clear" onclick="clearFilters()">Clear All</button>
+                <button class="f-footer-btn apply" onclick="applyFilters()">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             ARNIYA LENS — Meesho-Style Visual Search
+             ══════════════════════════════════════ -->
+        <div class="modal-full" id="lens-modal">
+
+            <!-- Header -->
+            <div class="lens-header">
+                <button class="lens-back-btn" onclick="closeLens()" title="Back" aria-label="Close visual search">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="lens-header-title">
+                    <i class="fa-solid fa-camera-retro"></i>
+                    <span>Visual Search</span>
+                </div>
+                <div class="lens-header-badge">AI</div>
+            </div>
+
+            <!-- ── STEP 1: Choose source ── -->
+            <div class="lens-step" id="lens-step-choose">
+                <div class="lens-hero-text">
+                    <h2>Search by Photo</h2>
+                    <p>Find exact &amp; similar products instantly</p>
+                </div>
+
+                <!-- Image Preview (hidden until image selected) -->
+                <div class="lens-preview-box lens-hidden" id="lens-preview-box">
+                    <img id="lens-preview-img" src="" alt="Preview">
+                    <button class="lens-preview-clear" onclick="clearLensImage()" title="Remove image" aria-label="Remove selected image">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <div class="lens-scan-overlay" id="lens-scan-overlay">
+                        <div class="lens-scan-line"></div>
+                        <div class="lens-scan-corners">
+                            <span class="sc tl"></span><span class="sc tr"></span>
+                            <span class="sc bl"></span><span class="sc br"></span>
+                        </div>
+                        <div class="lens-scan-label">Scanning...</div>
+                    </div>
+                </div>
+
+                <!-- Source buttons -->
+                <div class="lens-source-row" id="lens-source-row">
+                    <!-- Hidden file inputs -->
+                    <input type="file" id="lens-gallery-input" accept="image/*" class="lens-hidden" aria-label="Upload image from gallery" onchange="handleLensFile(event)">
+                    <input type="file" id="lens-camera-input" accept="image/*" class="lens-hidden" aria-label="Capture image with camera" onchange="handleLensFile(event)">
+
+                    <button class="lens-src-btn" onclick="document.getElementById('lens-gallery-input').click()">
+                        <div class="lens-src-icon">
+                            <i class="fa-regular fa-images"></i>
+                        </div>
+                        <span>Gallery</span>
+                        <small>Upload from phone</small>
+                    </button>
+
+                    <button class="lens-src-btn" onclick="document.getElementById('lens-camera-input').click()">
+                        <div class="lens-src-icon camera">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <span>Camera</span>
+                        <small>Take a new photo</small>
+                    </button>
+                </div>
+
+                <!-- OR Divider -->
+                <div class="lens-or-row">
+                    <span></span><em>or try a sample</em><span></span>
+                </div>
+
+                <!-- Sample images -->
+                <div class="lens-samples-row" id="lens-samples-row">
+                    <button class="lens-sample lens-sample-0" onclick="useSampleImage(0)" title="Search with Watch sample" aria-label="Use watch sample image"></button>
+                    <button class="lens-sample lens-sample-1" onclick="useSampleImage(1)" title="Search with Jewelry sample" aria-label="Use jewelry sample image"></button>
+                    <button class="lens-sample lens-sample-2" onclick="useSampleImage(2)" title="Search with Bag sample" aria-label="Use bag sample image"></button>
+                    <button class="lens-sample lens-sample-3" onclick="useSampleImage(3)" title="Search with Backpack sample" aria-label="Use backpack sample image"></button>
+                </div>
+
+                <!-- Search CTA (visible after image selected) -->
+                <button class="lens-search-cta lens-hidden" id="lens-search-cta" onclick="runLensSearch()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Find Similar Products
+                </button>
+            </div>
+
+            <!-- ── STEP 2: AI Analysing loader ── -->
+            <div class="lens-step lens-hidden" id="lens-step-loading">
+                <div class="lens-ai-loader">
+                    <div class="lens-ai-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="ring-track" cx="50" cy="50" r="42"/>
+                            <circle class="ring-fill" cx="50" cy="50" r="42"/>
+                        </svg>
+                        <i class="fa-solid fa-camera-retro"></i>
+                    </div>
+                    <div class="lens-ai-steps" id="lens-ai-steps">
+                        <div class="ai-step active" id="ai-s1"><i class="fa-solid fa-circle-notch fa-spin"></i> Uploading image…</div>
+                        <div class="ai-step" id="ai-s2"><i class="fa-solid fa-circle-notch fa-spin"></i> Running Vision AI…</div>
+                        <div class="ai-step" id="ai-s3"><i class="fa-solid fa-circle-notch fa-spin"></i> Matching products…</div>
+                        <div class="ai-step" id="ai-s4"><i class="fa-solid fa-circle-notch fa-spin"></i> Ranking results…</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── STEP 3: Results ── -->
+            <div class="lens-step lens-hidden" id="lens-step-results">
+                <!-- Searched image thumbnail + tags -->
+                <div class="lens-result-header">
+                    <img class="lens-result-thumb" id="lens-result-thumb" src="" alt="">
+                    <div class="lens-result-meta">
+                        <div class="lens-result-tags" id="lens-result-tags"></div>
+                        <p class="lens-result-count" id="lens-result-count"></p>
+                    </div>
+                    <button class="lens-new-search" onclick="resetLens()">
+                        <i class="fa-solid fa-rotate-left"></i> New
+                    </button>
+                </div>
+
+                <!-- Exact match (first product) -->
+                <div class="lens-section-label">Exact Match</div>
+                <div class="lens-exact-card" id="lens-exact-card"></div>
+
+                <!-- Similar products grid -->
+                <div class="lens-section-label">Similar Products</div>
+                <div class="lens-results-grid" id="lens-results-grid"></div>
+            </div>
+
+        </div>
+    </div>
+    
+    <script src="assets/js/global.js?v=2"></script>
+    <script src="assets/js/mockData.js?v=2"></script>
+    <script src="assets/js/shop.js?v=2"></script>
+</body>
+</html>

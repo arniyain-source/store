@@ -1,0 +1,115 @@
+# ============================================
+# DesiVastra - .htaccess
+# Security, Performance, Routing, Caching
+# ============================================
+
+# ── Disable Directory Listing ──
+Options -Indexes
+
+# ── Prevent access to sensitive files ──
+<FilesMatch "\.(env|git|gitignore|htpasswd|ini|log|sh|bak|old|orig|swp)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ── Block SQL files ──
+<FilesMatch "\.sql$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ── Block dangerous installer/patch scripts ──
+<FilesMatch "^(setup|sql_patch|install_admin).*\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ── Protect .htaccess itself ──
+<Files .htaccess>
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# ── Security Headers ──
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Content-Security-Policy "upgrade-insecure-requests"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# ── Enable GZIP Compression ──
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ── Browser Caching ──
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType font/woff2 "access plus 1 month"
+    ExpiresByType text/html "access plus 1 hour"
+</IfModule>
+
+# ── Cache-Control Headers ──
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|webp|ico)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+    <FilesMatch "\.(woff|woff2|ttf|otf)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
+
+# ── Custom Error Pages ──
+ErrorDocument 404 /index.html
+ErrorDocument 500 /index.html
+
+# ── Force HTTPS ──
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect HTTP → HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # ── Route: /install → install.php ──
+    RewriteRule ^install/?$ /install.php [L,QSA]
+
+    # ── Route: /admin-login → admin-login.php ──
+    RewriteRule ^admin-login/?$ /admin-login.php [L,QSA]
+
+    # ── Route: /admin → admin/index.php ──
+    RewriteRule ^admin/?$ /admin/index.php [L,QSA]
+
+    # ── Route: /admin/dashboard → admin/index.php ──
+    RewriteRule ^admin/dashboard/?$ /admin/index.php [L,QSA]
+
+    # ── Route: /logout → admin/logout.php ──
+    RewriteRule ^logout/?$ /admin/logout.php [L,QSA]
+
+    # ── Route: /shop → shop.html ──
+    RewriteRule ^shop/?$ /shop.html [L,QSA]
+
+    # ── Route: /login → login.html ──
+    RewriteRule ^login/?$ /login.html [L,QSA]
+
+    # ── Route: /register → register.html ──
+    RewriteRule ^register/?$ /register.html [L,QSA]
+
+    # ── Route: /checkout → checkout.html ──
+    RewriteRule ^checkout/?$ /checkout.html [L,QSA]
+</IfModule>

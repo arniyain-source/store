@@ -1,0 +1,33 @@
+# .gitignore for DesiVastra store project
+# Sensitive config files
+config/database.php
+config/.env
+.env
+
+# Temp test/fix scripts
+admin/fix_db*.php
+admin/test_*.php
+admin/test_cols*.php
+admin/test_customers.php
+admin/test_activity.php
+admin/test_reviews.php
+admin/test_currency.php
+
+# Uploads folder (large media files)
+uploads/*
+!uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PHP error logs
+*.log
+error_log
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
