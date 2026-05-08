@@ -22,8 +22,10 @@ $errors = [];
 $defaults = [
     'name' => '', 'slug' => '', 'sku' => '', 'category_id' => '',
     'short_description' => '', 'description' => '', 'price' => '',
-    'old_price' => '', 'cost_price' => '', 'stock' => '0',
-    'low_stock_threshold' => '5', 'main_image' => '',
+    'old_price' => '', 'reseller_price' => '', 'wholesale_price' => '',
+    'purchase_cost' => '', 'stock' => '0',
+    'low_stock_threshold' => '5', 'main_image' => '', 'video_url' => '',
+    'fabric' => '', 'work' => '', 'blouse_details' => '',
     'images' => [], 'sizes' => [], 'colors' => [], 'finishes' => [],
     'features' => [], 'tags' => [], 'is_active' => 1,
     'is_featured' => 0, 'is_new_arrival' => 0,
@@ -82,11 +84,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $categoryId         = (int)($_POST['category_id'] ?? 0) ?: null;
     $shortDescription   = trim($_POST['short_description'] ?? '');
     $description        = trim($_POST['description'] ?? '');
+    $fabric             = trim($_POST['fabric'] ?? '');
+    $work               = trim($_POST['work'] ?? '');
+    $blouseDetails      = trim($_POST['blouse_details'] ?? '');
     $price              = trim($_POST['price'] ?? '');
     $oldPrice           = trim($_POST['old_price'] ?? '') ?: null;
-    $costPrice          = trim($_POST['cost_price'] ?? '') ?: null;
+    $resellerPrice      = trim($_POST['reseller_price'] ?? '') ?: null;
+    $wholesalePrice     = trim($_POST['wholesale_price'] ?? '') ?: null;
+    $purchaseCost       = trim($_POST['purchase_cost'] ?? '') ?: null;
     $stock              = (int)($_POST['stock'] ?? 0);
     $lowStockThreshold  = (int)($_POST['low_stock_threshold'] ?? 5);
+    $videoUrl           = trim($_POST['video_url'] ?? '');
     $deliveryMinDays    = (int)($_POST['delivery_min_days'] ?? 3);
     $deliveryMaxDays    = (int)($_POST['delivery_max_days'] ?? 7);
     $metaTitle          = trim($_POST['meta_title'] ?? '');
@@ -207,13 +215,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Merge existing + new additional images
             $allImages = array_merge($existingImages, $newImages);
 
-            // Build features array from description (simple: just use as-is for now)
-            $features = [];
-
             // Prepare numeric values
-            $priceVal     = round((float)$price, 2);
-            $oldPriceVal  = $oldPrice !== null ? round((float)$oldPrice, 2) : null;
-            $costPriceVal = $costPrice !== null ? round((float)$costPrice, 2) : null;
+            $priceVal          = round((float)$price, 2);
+            $oldPriceVal       = $oldPrice !== null ? round((float)$oldPrice, 2) : null;
+            $resellerPriceVal  = $resellerPrice !== null ? round((float)$resellerPrice, 2) : null;
+            $wholesalePriceVal = $wholesalePrice !== null ? round((float)$wholesalePrice, 2) : null;
+            $purchaseCostVal   = $purchaseCost !== null ? round((float)$purchaseCost, 2) : null;
 
             if ($isEdit) {
                 // ============================================
@@ -223,10 +230,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     UPDATE products SET
                         name = ?, slug = ?, sku = ?, category_id = ?,
                         short_description = ?, description = ?,
-                        price = ?, old_price = ?, cost_price = ?,
+                        fabric = ?, work = ?, blouse_details = ?,
+                        price = ?, old_price = ?, reseller_price = ?, wholesale_price = ?, purchase_cost = ?,
                         stock = ?, low_stock_threshold = ?,
-                        main_image = ?, images = ?,
-                        sizes = ?, colors = ?, finishes = ?, features = ?, tags = ?,
+                        main_image = ?, video_url = ?, images = ?,
+                        sizes = ?, colors = ?, finishes = ?, tags = ?,
                         is_active = ?, is_featured = ?, is_new_arrival = ?,
                         is_top_selling = ?, is_boutique_only = ?,
                         delivery_min_days = ?, delivery_max_days = ?,
@@ -237,15 +245,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([
                     $name, $slug, $sku ?: null, $categoryId ?: null,
                     $shortDescription ?: null, $description ?: null,
-                    $priceVal, $oldPriceVal, $costPriceVal,
+                    $fabric ?: null, $work ?: null, $blouseDetails ?: null,
+                    $priceVal, $oldPriceVal, $resellerPriceVal, $wholesalePriceVal, $purchaseCostVal,
                     $stock, $lowStockThreshold,
-                    $mainImage ?: null,
-                    json_encode($allImages),
-                    json_encode($sizes),
-                    json_encode($colors),
-                    json_encode($finishes),
-                    json_encode($features),
-                    json_encode($tags),
+                    $mainImage ?: null, $videoUrl ?: null, json_encode($allImages),
+                    json_encode($sizes), json_encode($colors), json_encode($finishes), json_encode($tags),
                     $isActive, $isFeatured, $isNewArrival,
                     $isTopSelling, $isBoutiqueOnly,
                     $deliveryMinDays, $deliveryMaxDays,
@@ -263,10 +267,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     INSERT INTO products (
                         name, slug, sku, category_id,
                         short_description, description,
-                        price, old_price, cost_price,
+                        fabric, work, blouse_details,
+                        price, old_price, reseller_price, wholesale_price, purchase_cost,
                         stock, low_stock_threshold,
-                        main_image, images,
-                        sizes, colors, finishes, features, tags,
+                        main_image, video_url, images,
+                        sizes, colors, finishes, tags,
                         is_active, is_featured, is_new_arrival,
                         is_top_selling, is_boutique_only,
                         delivery_min_days, delivery_max_days,
@@ -276,9 +281,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ?, ?, ?, ?,
                         ?, ?,
                         ?, ?, ?,
-                        ?, ?,
-                        ?, ?,
                         ?, ?, ?, ?, ?,
+                        ?, ?,
+                        ?, ?, ?,
+                        ?, ?, ?, ?,
                         ?, ?, ?,
                         ?, ?,
                         ?, ?,
@@ -289,15 +295,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([
                     $name, $slug, $sku ?: null, $categoryId ?: null,
                     $shortDescription ?: null, $description ?: null,
-                    $priceVal, $oldPriceVal, $costPriceVal,
+                    $fabric ?: null, $work ?: null, $blouseDetails ?: null,
+                    $priceVal, $oldPriceVal, $resellerPriceVal, $wholesalePriceVal, $purchaseCostVal,
                     $stock, $lowStockThreshold,
-                    $mainImage ?: null,
-                    json_encode($allImages),
-                    json_encode($sizes),
-                    json_encode($colors),
-                    json_encode($finishes),
-                    json_encode($features),
-                    json_encode($tags),
+                    $mainImage ?: null, $videoUrl ?: null, json_encode($allImages),
+                    json_encode($sizes), json_encode($colors), json_encode($finishes), json_encode($tags),
                     $isActive, $isFeatured, $isNewArrival,
                     $isTopSelling, $isBoutiqueOnly,
                     $deliveryMinDays, $deliveryMaxDays,
@@ -329,12 +331,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'category_id'        => $categoryId,
         'short_description'  => $shortDescription,
         'description'        => $description,
+        'fabric'             => $fabric,
+        'work'               => $work,
+        'blouse_details'     => $blouseDetails,
         'price'              => $price,
         'old_price'          => $oldPrice,
-        'cost_price'         => $costPrice,
+        'reseller_price'     => $resellerPrice,
+        'wholesale_price'    => $wholesalePrice,
+        'purchase_cost'      => $purchaseCost,
         'stock'              => $stock,
         'low_stock_threshold'=> $lowStockThreshold,
         'main_image'         => $defaults['main_image'] ?? '',
+        'video_url'          => $videoUrl,
         'images'             => $existingImages,
         'sizes'              => $sizes,
         'colors'             => $colors,
@@ -555,6 +563,15 @@ function fv($key, $data) {
             border: 1px solid var(--border-color);
             margin-bottom: 10px;
         }
+
+        /* Char counter */
+        .char-counter {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 4px;
+        }
+        .char-counter.limit { color: var(--danger); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -644,7 +661,7 @@ function fv($key, $data) {
                                     <i class="fas fa-info-circle" style="margin-right: 4px;"></i> General
                                 </button>
                                 <button type="button" class="tab-btn" data-tab="pricing">
-                                    <i class="fas fa-tags" style="margin-right: 4px;"></i> Pricing & Inventory
+                                    <i class="fas fa-tags" style="margin-right: 4px;"></i> Pricing & Attributes
                                 </button>
                                 <button type="button" class="tab-btn" data-tab="media">
                                     <i class="fas fa-images" style="margin-right: 4px;"></i> Media
@@ -668,13 +685,18 @@ function fv($key, $data) {
                                 <div class="tab-panel active" id="tab-general">
                                     <div class="form-group">
                                         <label class="form-label">Product Name <span style="color:var(--danger);">*</span></label>
-                                        <input type="text" name="name" class="form-control" placeholder="Enter product name" value="<?php echo fv('name', $formData); ?>" required>
+                                        <input type="text" name="name" id="productName" class="form-control" placeholder="Enter product name" value="<?php echo fv('name', $formData); ?>" required>
                                     </div>
 
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label class="form-label">SKU</label>
-                                            <input type="text" name="sku" class="form-control" placeholder="e.g., DV-WATCH-001" value="<?php echo fv('sku', $formData); ?>">
+                                            <div class="input-group">
+                                                <input type="text" name="sku" id="productSku" class="form-control" placeholder="e.g., DV-WATCH-001" value="<?php echo fv('sku', $formData); ?>">
+                                                <button type="button" class="btn btn-secondary btn-sm" onclick="generateSku()" title="Auto-Generate SKU">
+                                                    <i class="fas fa-magic"></i>
+                                                </button>
+                                            </div>
                                             <div class="form-hint">Unique stock keeping unit identifier</div>
                                         </div>
                                         <div class="form-group">
@@ -713,53 +735,19 @@ function fv($key, $data) {
                                         </div>
                                         <textarea name="description" class="form-control" rows="8" placeholder="Write a detailed product description..."><?php echo fv('description', $formData); ?></textarea>
                                     </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label">Status</label>
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <label class="switch">
-                                                <input type="checkbox" name="is_active" value="1" <?php echo !empty($formData['is_active']) ? 'checked' : ''; ?>>
-                                                <span class="slider"></span>
-                                            </label>
-                                            <span style="font-size: 13px; color: var(--text-secondary);" id="statusLabel">
-                                                <?php echo !empty($formData['is_active']) ? 'Active' : 'Inactive'; ?>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label class="form-label">Product Flags</label>
-                                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                                            <div class="form-check">
-                                                <input type="checkbox" name="is_featured" id="is_featured" value="1" <?php echo !empty($formData['is_featured']) ? 'checked' : ''; ?>>
-                                                <label for="is_featured"><i class="fas fa-star" style="color:var(--warning);margin-right:4px;font-size:11px;"></i> Featured</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="checkbox" name="is_new_arrival" id="is_new_arrival" value="1" <?php echo !empty($formData['is_new_arrival']) ? 'checked' : ''; ?>>
-                                                <label for="is_new_arrival"><i class="fas fa-bolt" style="color:var(--purple);margin-right:4px;font-size:11px;"></i> New Arrival</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="checkbox" name="is_top_selling" id="is_top_selling" value="1" <?php echo !empty($formData['is_top_selling']) ? 'checked' : ''; ?>>
-                                                <label for="is_top_selling"><i class="fas fa-fire" style="color:var(--danger);margin-right:4px;font-size:11px;"></i> Top Selling</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="checkbox" name="is_boutique_only" id="is_boutique_only" value="1" <?php echo !empty($formData['is_boutique_only']) ? 'checked' : ''; ?>>
-                                                <label for="is_boutique_only"><i class="fas fa-gem" style="color:var(--info);margin-right:4px;font-size:11px;"></i> Boutique Only</label>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <!-- ======================================== -->
-                                <!-- TAB: Pricing & Inventory                 -->
+                                <!-- TAB: Pricing & Attributes                 -->
                                 <!-- ======================================== -->
                                 <div class="tab-panel" id="tab-pricing">
+                                    <div class="detail-section-title"><i class="fas fa-indian-rupee-sign"></i> Pricing</div>
                                     <div class="form-row-3">
                                         <div class="form-group">
                                             <label class="form-label">Selling Price <span style="color:var(--danger);">*</span></label>
                                             <div class="input-group">
                                                 <span class="input-prefix">&#8377;</span>
-                                                <input type="number" name="price" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('price', $formData); ?>" required>
+                                                <input type="number" name="price" id="sellingPrice" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('price', $formData); ?>" required>
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -768,31 +756,52 @@ function fv($key, $data) {
                                                 <span class="input-prefix">&#8377;</span>
                                                 <input type="number" name="old_price" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('old_price', $formData); ?>">
                                             </div>
-                                            <div class="form-hint">Original price before discount</div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">Cost Price</label>
+                                            <label class="form-label">Reseller Price</label>
                                             <div class="input-group">
                                                 <span class="input-prefix">&#8377;</span>
-                                                <input type="number" name="cost_price" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('cost_price', $formData); ?>">
+                                                <input type="number" name="reseller_price" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('reseller_price', $formData); ?>">
                                             </div>
-                                            <div class="form-hint">Your purchase cost (hidden from customers)</div>
                                         </div>
                                     </div>
 
                                     <div class="form-row-3">
                                         <div class="form-group">
-                                            <label class="form-label">Stock Quantity</label>
-                                            <input type="number" name="stock" class="form-control" placeholder="0" min="0" value="<?php echo fv('stock', $formData); ?>">
+                                            <label class="form-label">Wholesale Price</label>
+                                            <div class="input-group">
+                                                <span class="input-prefix">&#8377;</span>
+                                                <input type="number" name="wholesale_price" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('wholesale_price', $formData); ?>">
+                                            </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">Low Stock Threshold</label>
-                                            <input type="number" name="low_stock_threshold" class="form-control" placeholder="5" min="0" value="<?php echo fv('low_stock_threshold', $formData); ?>">
-                                            <div class="form-hint">Alert when stock falls below this</div>
+                                            <label class="form-label">Purchase/Cost Price</label>
+                                            <div class="input-group">
+                                                <span class="input-prefix">&#8377;</span>
+                                                <input type="number" name="purchase_cost" class="form-control" placeholder="0.00" step="0.01" min="0" value="<?php echo fv('purchase_cost', $formData); ?>">
+                                            </div>
+                                            <div class="form-hint">Hidden from customers</div>
+                                        </div>
+                                        <div class="form-group"></div>
+                                    </div>
+
+                                    <div class="detail-divider"></div>
+                                    <div class="detail-section-title"><i class="fas fa-list-ul"></i> Product Attributes</div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Fabric</label>
+                                            <input type="text" name="fabric" class="form-control" placeholder="e.g., Pure Silk, Cotton" value="<?php echo fv('fabric', $formData); ?>">
                                         </div>
                                         <div class="form-group">
-                                            <!-- spacer -->
+                                            <label class="form-label">Work / Embroidery</label>
+                                            <input type="text" name="work" class="form-control" placeholder="e.g., Zari Work, Mirror Work" value="<?php echo fv('work', $formData); ?>">
                                         </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Blouse Details</label>
+                                        <textarea name="blouse_details" class="form-control" rows="2" placeholder="Describe blouse fabric, length, etc."><?php echo fv('blouse_details', $formData); ?></textarea>
                                     </div>
 
                                     <div class="form-row">
@@ -841,7 +850,7 @@ function fv($key, $data) {
 
                                     <!-- Additional Images -->
                                     <div class="form-group">
-                                        <label class="form-label">Additional Images</label>
+                                        <label class="form-label">Gallery Thumbnails</label>
 
                                         <!-- Existing additional images -->
                                         <div id="existingImagesGrid" class="image-preview-grid">
@@ -861,10 +870,20 @@ function fv($key, $data) {
                                         <div class="image-upload" onclick="document.getElementById('additionalImagesInput').click()" style="margin-top: 12px;">
                                             <i class="fas fa-images"></i>
                                             <p>Click to upload additional images</p>
-                                            <small>Select multiple images at once (JPG, PNG, GIF, WebP)</small>
+                                            <small>Select multiple images (JPG, PNG, GIF, WebP)</small>
                                             <input type="file" id="additionalImagesInput" name="additional_images[]" accept="image/jpeg,image/png,image/gif,image/webp" multiple onchange="previewAdditionalImages(event)">
                                         </div>
                                         <div id="newImagesPreview" class="image-preview-grid"></div>
+                                    </div>
+
+                                    <div class="detail-divider"></div>
+                                    <div class="form-group">
+                                        <label class="form-label">Product Video URL</label>
+                                        <div class="input-group">
+                                            <span class="input-prefix"><i class="fas fa-video"></i></span>
+                                            <input type="url" name="video_url" class="form-control" placeholder="e.g., https://www.youtube.com/watch?v=..." value="<?php echo fv('video_url', $formData); ?>">
+                                        </div>
+                                        <div class="form-hint">YouTube, Vimeo, or MP4 link</div>
                                     </div>
                                 </div>
 
@@ -887,7 +906,7 @@ function fv($key, $data) {
                                             <?php endif; ?>
                                             <input type="text" id="sizeInput" placeholder="Type size and press Enter" onkeydown="handleTagInput(event, 'sizes')">
                                         </div>
-                                        <div class="form-hint">Press Enter or comma to add a size (e.g., S, M, L, XL, Free Size)</div>
+                                        <div class="form-hint">Press Enter or comma to add (e.g., S, M, L, XL, XXL)</div>
                                     </div>
 
                                     <!-- Colors -->
@@ -915,7 +934,6 @@ function fv($key, $data) {
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <div class="form-hint">Add color name and pick a color swatch</div>
                                     </div>
 
                                     <!-- Finishes -->
@@ -943,7 +961,6 @@ function fv($key, $data) {
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-                                        <div class="form-hint">Add finish name and pick a representative color</div>
                                     </div>
                                 </div>
 
@@ -953,18 +970,18 @@ function fv($key, $data) {
                                 <div class="tab-panel" id="tab-seo">
                                     <div class="form-group">
                                         <label class="form-label">Meta Title</label>
-                                        <input type="text" name="meta_title" class="form-control" placeholder="SEO title for search engines" maxlength="255" value="<?php echo fv('meta_title', $formData); ?>">
-                                        <div class="form-hint">Recommended: 50-60 characters</div>
+                                        <input type="text" name="meta_title" id="metaTitle" class="form-control" placeholder="SEO title for search engines" maxlength="255" value="<?php echo fv('meta_title', $formData); ?>">
+                                        <div class="char-counter" id="metaTitleCounter">0 / 60</div>
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">Meta Description</label>
-                                        <textarea name="meta_description" class="form-control" rows="3" placeholder="Brief description for search engine results" maxlength="500"><?php echo fv('meta_description', $formData); ?></textarea>
-                                        <div class="form-hint">Recommended: 150-160 characters</div>
+                                        <textarea name="meta_description" id="metaDescription" class="form-control" rows="4" placeholder="Brief description for search engine results" maxlength="500"><?php echo fv('meta_description', $formData); ?></textarea>
+                                        <div class="char-counter" id="metaDescCounter">0 / 160</div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="form-label">Product Tags</label>
+                                        <label class="form-label">Product Tags / Keywords</label>
                                         <div class="tags-input" id="tagsTagsInput" onclick="document.getElementById('tagInput').focus()">
                                             <?php if (!empty($formData['tags']) && is_array($formData['tags'])): ?>
                                                 <?php foreach ($formData['tags'] as $tag): ?>
@@ -976,7 +993,7 @@ function fv($key, $data) {
                                             <?php endif; ?>
                                             <input type="text" id="tagInput" placeholder="Type tag and press Enter" onkeydown="handleTagInput(event, 'tags')">
                                         </div>
-                                        <div class="form-hint">Press Enter or comma to add a tag (e.g., luxury, premium, gold-plated)</div>
+                                        <div class="form-hint">Tags help customers find your products in search</div>
                                     </div>
                                 </div>
 
@@ -989,32 +1006,71 @@ function fv($key, $data) {
                     <!-- ============================================ -->
                     <div class="product-sidebar">
 
+                        <!-- Settings & Status Card -->
+                        <div class="card" style="margin-bottom: 16px;">
+                            <div class="card-header">
+                                <h3><i class="fas fa-cog" style="color:var(--gold-primary);margin-right:8px;"></i> Settings</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <label class="switch">
+                                            <input type="checkbox" name="is_active" value="1" <?php echo !empty($formData['is_active']) ? 'checked' : ''; ?>>
+                                            <span class="slider"></span>
+                                        </label>
+                                        <span style="font-size: 13px; color: var(--text-secondary);" id="statusLabel">
+                                            <?php echo !empty($formData['is_active']) ? 'Active' : 'Inactive'; ?>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-divider"></div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Stock Inventory</label>
+                                    <input type="number" name="stock" class="form-control" placeholder="0" min="0" value="<?php echo fv('stock', $formData); ?>">
+                                    <div class="form-hint">Available quantity</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Low Stock Alert</label>
+                                    <input type="number" name="low_stock_threshold" class="form-control" placeholder="5" min="0" value="<?php echo fv('low_stock_threshold', $formData); ?>">
+                                </div>
+
+                                <div class="detail-divider"></div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Highlights</label>
+                                    <div class="form-check" style="margin-bottom: 8px;">
+                                        <input type="checkbox" name="is_featured" id="is_featured" value="1" <?php echo !empty($formData['is_featured']) ? 'checked' : ''; ?>>
+                                        <label for="is_featured">Featured</label>
+                                    </div>
+                                    <div class="form-check" style="margin-bottom: 8px;">
+                                        <input type="checkbox" name="is_new_arrival" id="is_new_arrival" value="1" <?php echo !empty($formData['is_new_arrival']) ? 'checked' : ''; ?>>
+                                        <label for="is_new_arrival">New Arrival</label>
+                                    </div>
+                                    <div class="form-check" style="margin-bottom: 8px;">
+                                        <input type="checkbox" name="is_top_selling" id="is_top_selling" value="1" <?php echo !empty($formData['is_top_selling']) ? 'checked' : ''; ?>>
+                                        <label for="is_top_selling">Top Selling</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="is_boutique_only" id="is_boutique_only" value="1" <?php echo !empty($formData['is_boutique_only']) ? 'checked' : ''; ?>>
+                                        <label for="is_boutique_only">Boutique Only</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Product Summary Card -->
                         <div class="card" style="margin-bottom: 16px;">
                             <div class="card-header">
-                                <h3><i class="fas fa-clipboard-list" style="color:var(--gold-primary);margin-right:8px;"></i> Product Summary</h3>
+                                <h3><i class="fas fa-clipboard-list" style="color:var(--gold-primary);margin-right:8px;"></i> Summary</h3>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body" style="padding-top: 10px;">
                                 <div class="summary-row">
                                     <span class="label">Name</span>
-                                    <span class="value" id="summaryName"><?php echo $isEdit ? clean($formData['name']) : 'Untitled Product'; ?></span>
-                                </div>
-                                <div class="summary-row">
-                                    <span class="label">Category</span>
-                                    <span class="value" id="summaryCategory">
-                                        <?php
-                                            if ($isEdit && !empty($formData['category_id'])) {
-                                                foreach ($categories as $cat) {
-                                                    if ($cat['id'] == $formData['category_id']) {
-                                                        echo clean($cat['name']);
-                                                        break;
-                                                    }
-                                                }
-                                            } else {
-                                                echo 'Not selected';
-                                            }
-                                        ?>
-                                    </span>
+                                    <span class="value" id="summaryName"><?php echo $isEdit ? clean($formData['name']) : 'Untitled'; ?></span>
                                 </div>
                                 <div class="summary-row">
                                     <span class="label">Price</span>
@@ -1024,34 +1080,18 @@ function fv($key, $data) {
                                     <span class="label">Stock</span>
                                     <span class="value" id="summaryStock"><?php echo (int)($formData['stock'] ?? 0); ?> units</span>
                                 </div>
-                                <div class="summary-row">
-                                    <span class="label">Status</span>
-                                    <span class="value" id="summaryStatus">
-                                        <?php if (!empty($formData['is_active'])): ?>
-                                            <span class="badge badge-success"><span class="badge-dot" style="background:var(--success);"></span> Active</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-danger"><span class="badge-dot" style="background:var(--danger);"></span> Inactive</span>
-                                        <?php endif; ?>
-                                    </span>
-                                </div>
-                                <?php if ($isEdit): ?>
-                                    <div class="summary-row">
-                                        <span class="label">Slug</span>
-                                        <span class="value" style="font-size:11px;color:var(--text-muted);word-break:break-all;"><?php echo clean($formData['slug'] ?? ''); ?></span>
-                                    </div>
-                                <?php endif; ?>
 
                                 <!-- Image Thumbnail -->
                                 <?php if (!empty($formData['main_image'])): ?>
                                     <div style="margin-top: 12px; text-align: center;">
-                                        <img src="<?php echo '../' . clean($formData['main_image']); ?>" alt="Preview" style="max-width: 100%; max-height: 140px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                        <img src="<?php echo '../' . clean($formData['main_image']); ?>" alt="Preview" style="max-width: 100%; max-height: 120px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
 
                         <!-- Save Actions Card -->
-                        <div class="card" style="margin-bottom: 16px;">
+                        <div class="card">
                             <div class="card-header">
                                 <h3><i class="fas fa-save" style="color:var(--gold-primary);margin-right:8px;"></i> Save</h3>
                             </div>
@@ -1069,20 +1109,6 @@ function fv($key, $data) {
                                         </button>
                                     </div>
                                 <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <!-- Quick Info Card -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h3><i class="fas fa-lightbulb" style="color:var(--warning);margin-right:8px;"></i> Tips</h3>
-                            </div>
-                            <div class="card-body" style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
-                                <p><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i> Use a clear, descriptive product name</p>
-                                <p><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i> Set an old price higher than selling price to show discount</p>
-                                <p><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i> Upload high-quality images (at least 800x800px)</p>
-                                <p><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i> Add relevant tags for better SEO visibility</p>
-                                <p><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i> Keep low stock threshold to get timely alerts</p>
                             </div>
                         </div>
                     </div><!-- /.product-sidebar -->
@@ -1107,7 +1133,7 @@ function fv($key, $data) {
             <p style="margin-bottom: 12px;">Are you sure you want to delete this product?</p>
             <div style="background: var(--danger-bg); border: 1px solid rgba(231,76,60,0.2); border-radius: var(--radius-sm); padding: 12px 16px;">
                 <p style="font-weight: 600; color: var(--danger); margin-bottom: 4px;"><?php echo clean($formData['name']); ?></p>
-                <p style="font-size: 12px; color: var(--text-muted);">This action cannot be undone. The product will be permanently removed.</p>
+                <p style="font-size: 12px; color: var(--text-muted);">This action cannot be undone.</p>
             </div>
         </div>
         <div class="modal-footer">
@@ -1154,16 +1180,38 @@ if (statusCheckbox) {
 }
 
 // ============================================
+// SKU GENERATOR
+// ============================================
+function generateSku() {
+    var name = document.getElementById('productName').value.trim();
+    var price = document.getElementById('sellingPrice').value;
+    
+    if (!name) {
+        alert('Please enter a product name first.');
+        document.getElementById('productName').focus();
+        return;
+    }
+
+    // Logic: Prefix-FirstLettersOfName-PriceRounded
+    var prefix = 'DV';
+    var cleanName = name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase();
+    var pricePart = price ? Math.ceil(price / 50) * 50 : '000';
+    var random = Math.floor(100 + Math.random() * 900);
+    
+    var sku = prefix + '-' + cleanName + '-' + pricePart + '-' + random;
+    document.getElementById('productSku').value = sku;
+}
+
+// ============================================
 // LIVE SUMMARY UPDATE
 // ============================================
-var nameInput = document.querySelector('input[name="name"]');
-var priceInput = document.querySelector('input[name="price"]');
+var nameInput = document.getElementById('productName');
+var priceInput = document.getElementById('sellingPrice');
 var stockInput = document.querySelector('input[name="stock"]');
-var categorySelect = document.querySelector('select[name="category_id"]');
 
 if (nameInput) {
     nameInput.addEventListener('input', function() {
-        document.getElementById('summaryName').textContent = this.value || 'Untitled Product';
+        document.getElementById('summaryName').textContent = this.value || 'Untitled';
     });
 }
 if (priceInput) {
@@ -1177,11 +1225,32 @@ if (stockInput) {
         document.getElementById('summaryStock').textContent = (parseInt(this.value) || 0) + ' units';
     });
 }
-if (categorySelect) {
-    categorySelect.addEventListener('change', function() {
-        document.getElementById('summaryCategory').textContent = this.options[this.selectedIndex].text;
-    });
+
+// ============================================
+// SEO CHARACTER COUNTERS
+// ============================================
+function updateCounter(inputId, counterId, limit) {
+    var input = document.getElementById(inputId);
+    var counter = document.getElementById(counterId);
+    if (!input || !counter) return;
+
+    var count = input.value.length;
+    counter.textContent = count + ' / ' + limit;
+    
+    if (count > limit) counter.classList.add('limit');
+    else counter.classList.remove('limit');
 }
+
+document.getElementById('metaTitle').addEventListener('input', function() {
+    updateCounter('metaTitle', 'metaTitleCounter', 60);
+});
+document.getElementById('metaDescription').addEventListener('input', function() {
+    updateCounter('metaDescription', 'metaDescCounter', 160);
+});
+
+// Init counters
+updateCounter('metaTitle', 'metaTitleCounter', 60);
+updateCounter('metaDescription', 'metaDescCounter', 160);
 
 // ============================================
 // DESCRIPTION TOOLBAR
@@ -1237,10 +1306,8 @@ function previewMainImage(event) {
 
 function removeMainImage() {
     document.getElementById('removeMainImage').value = '1';
-    // Clear preview if any
     var previewDiv = document.getElementById('mainImagePreview');
     if (previewDiv) previewDiv.innerHTML = '';
-    // Clear file input
     var mainInput = document.getElementById('mainImageInput');
     if (mainInput) mainInput.value = '';
 }
@@ -1297,11 +1364,9 @@ function handleTagInput(event, type) {
 
     if ((event.key === 'Enter' || event.key === ',' || event.key === 'Tab') && value) {
         event.preventDefault();
-        // Remove trailing comma
         value = value.replace(/,$/, '').trim();
         if (!value) return;
 
-        // Check for duplicate
         var container = input.closest('.tags-input');
         var existingTags = container.querySelectorAll('.tag');
         var isDuplicate = false;
@@ -1312,7 +1377,6 @@ function handleTagInput(event, type) {
         });
 
         if (!isDuplicate) {
-            // Create tag element
             var tagEl = document.createElement('span');
             tagEl.className = 'tag';
             tagEl.innerHTML = value + ' <span class="remove-tag" onclick="removeTag(\'' + type + '\', this)">&times;</span>';
@@ -1322,7 +1386,6 @@ function handleTagInput(event, type) {
         }
     }
 
-    // Handle backspace to remove last tag
     if (event.key === 'Backspace' && !input.value) {
         var container = input.closest('.tags-input');
         var tags = container.querySelectorAll('.tag');
@@ -1345,7 +1408,6 @@ function syncTagsToJson(type) {
     var tags = container.querySelectorAll('.tag');
     var values = [];
     tags.forEach(function(tag) {
-        // Get text without the × button
         var text = tag.textContent.replace('×', '').trim();
         if (text) values.push(text);
     });
@@ -1353,7 +1415,7 @@ function syncTagsToJson(type) {
 }
 
 // ============================================
-// COLORS & FINISHES (Variant Management)
+// COLORS & FINISHES
 // ============================================
 function addColor() {
     var nameInput = document.getElementById('colorNameInput');
@@ -1361,20 +1423,7 @@ function addColor() {
     var name = nameInput.value.trim();
     var hex = hexInput.value;
 
-    if (!name) {
-        nameInput.focus();
-        return;
-    }
-
-    // Check duplicate
-    var existing = document.querySelectorAll('#colorsList .variant-chip');
-    for (var i = 0; i < existing.length; i++) {
-        if (existing[i].getAttribute('data-name').toLowerCase() === name.toLowerCase()) {
-            nameInput.value = '';
-            nameInput.focus();
-            return;
-        }
-    }
+    if (!name) return;
 
     var chip = document.createElement('div');
     chip.className = 'variant-chip';
@@ -1385,7 +1434,6 @@ function addColor() {
 
     document.getElementById('colorsList').appendChild(chip);
     nameInput.value = '';
-    nameInput.focus();
     syncVariantsToJson('colors');
 }
 
@@ -1395,20 +1443,7 @@ function addFinish() {
     var name = nameInput.value.trim();
     var hex = hexInput.value;
 
-    if (!name) {
-        nameInput.focus();
-        return;
-    }
-
-    // Check duplicate
-    var existing = document.querySelectorAll('#finishesList .variant-chip');
-    for (var i = 0; i < existing.length; i++) {
-        if (existing[i].getAttribute('data-name').toLowerCase() === name.toLowerCase()) {
-            nameInput.value = '';
-            nameInput.focus();
-            return;
-        }
-    }
+    if (!name) return;
 
     var chip = document.createElement('div');
     chip.className = 'variant-chip';
@@ -1419,7 +1454,6 @@ function addFinish() {
 
     document.getElementById('finishesList').appendChild(chip);
     nameInput.value = '';
-    nameInput.focus();
     syncVariantsToJson('finishes');
 }
 
@@ -1443,16 +1477,6 @@ function syncVariantsToJson(type) {
 }
 
 // ============================================
-// ALLOW ENTER ON COLOR/FINISH NAME INPUTS
-// ============================================
-document.getElementById('colorNameInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addColor(); }
-});
-document.getElementById('finishNameInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addFinish(); }
-});
-
-// ============================================
 // DELETE PRODUCT MODAL
 // ============================================
 function confirmDeleteProduct() {
@@ -1462,50 +1486,17 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('show');
 }
 
-// Close modal on overlay click
-var deleteModal = document.getElementById('deleteModal');
-if (deleteModal) {
-    deleteModal.addEventListener('click', function(e) {
-        if (e.target === this) closeDeleteModal();
-    });
-}
-
-// Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDeleteModal();
-});
-
 // ============================================
-// FORM VALIDATION BEFORE SUBMIT
+// FORM SUBMIT HANDLING
 // ============================================
 document.getElementById('productForm').addEventListener('submit', function(e) {
-    var name = document.querySelector('input[name="name"]').value.trim();
-    var price = document.querySelector('input[name="price"]').value;
-    var category = document.querySelector('select[name="category_id"]').value;
-
-    if (!name || !price || !category) {
-        // Find the tab containing the first error and switch to it
-        if (!name || !category) {
-            switchTab('general');
-        } else if (!price) {
-            switchTab('pricing');
-        }
-    }
-
-    // Sync all JSON fields before submit
+    // Sync JSON fields
     syncTagsToJson('sizes');
     syncTagsToJson('tags');
     syncVariantsToJson('colors');
     syncVariantsToJson('finishes');
     updateExistingImages();
 });
-
-function switchTab(tabName) {
-    document.querySelectorAll('#formTabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
-    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-    document.querySelector('.tab-btn[data-tab="' + tabName + '"]').classList.add('active');
-    document.getElementById('tab-' + tabName).classList.add('active');
-}
 </script>
 
 </body>

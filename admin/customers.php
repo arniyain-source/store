@@ -433,15 +433,6 @@ try {
 $flash = getFlash();
 $csrf  = generateCSRF();
 
-// Helper: build query string preserving filters
-function buildCustomerQueryParams($overrides = []) {
-    $params = [];
-    if (!empty($_GET['search']))    $params['search']    = $_GET['search'];
-    if (!empty($_GET['user_type'])) $params['user_type'] = $_GET['user_type'];
-    if (!empty($_GET['status']))    $params['status']    = $_GET['status'];
-    $params = array_merge($params, $overrides);
-    return !empty($params) ? '?' . http_build_query($params) : '';
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1403,20 +1394,16 @@ function buildCustomerQueryParams($overrides = []) {
                                 of <?php echo $pagination['total']; ?> customers
                             </div>
                             <div class="pagination" style="margin-top:0">
-                                <?php
-                                    $queryParams = [];
-                                    if ($searchQuery)    $queryParams['search']    = $searchQuery;
-                                    if ($userTypeFilter) $queryParams['user_type'] = $userTypeFilter;
-                                    if ($statusFilter)   $queryParams['status']    = $statusFilter;
-                                    $queryString = !empty($queryParams) ? '&' . http_build_query($queryParams) : '';
-                                ?>
-
                                 <?php if ($pagination['has_prev']): ?>
-                                    <a href="customers.php?page=<?php echo $pagination['page'] - 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-left"></i>
+                                    <a href="customers.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                    <a href="customers.php<?php echo buildQueryParams(['page' => $pagination['page'] - 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-left"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
                                 <?php endif; ?>
 
                                 <?php
@@ -1424,14 +1411,14 @@ function buildCustomerQueryParams($overrides = []) {
                                     $endPage = min($pagination['total_pages'], $pagination['page'] + 2);
 
                                     if ($startPage > 1): ?>
-                                        <a href="customers.php?page=1<?php echo $queryString; ?>" class="page-btn">1</a>
+                                        <a href="customers.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn">1</a>
                                         <?php if ($startPage > 2): ?>
                                             <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
                                         <?php endif; ?>
                                     <?php endif; ?>
 
                                     <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                        <a href="customers.php?page=<?php echo $p; ?><?php echo $queryString; ?>"
+                                        <a href="customers.php<?php echo buildQueryParams(['page' => $p]); ?>"
                                            class="page-btn <?php echo $p === $pagination['page'] ? 'active' : ''; ?>">
                                             <?php echo $p; ?>
                                         </a>
@@ -1441,17 +1428,21 @@ function buildCustomerQueryParams($overrides = []) {
                                         <?php if ($endPage < $pagination['total_pages'] - 1): ?>
                                             <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
                                         <?php endif; ?>
-                                        <a href="customers.php?page=<?php echo $pagination['total_pages']; ?><?php echo $queryString; ?>" class="page-btn">
+                                        <a href="customers.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn">
                                             <?php echo $pagination['total_pages']; ?>
                                         </a>
                                     <?php endif; ?>
 
                                     <?php if ($pagination['has_next']): ?>
-                                        <a href="customers.php?page=<?php echo $pagination['page'] + 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                            <i class="fas fa-chevron-right"></i>
+                                        <a href="customers.php<?php echo buildQueryParams(['page' => $pagination['page'] + 1]); ?>" class="page-btn">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                        <a href="customers.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn">
+                                            <i class="fas fa-angle-double-right"></i>
                                         </a>
                                     <?php else: ?>
-                                        <button class="page-btn" disabled><i class="fas fa-chevron-right"></i></button>
+                                        <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
+                                        <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
                                     <?php endif; ?>
                             </div>
                         </div>

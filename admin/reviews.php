@@ -216,17 +216,6 @@ $reviews = $pagination['data'];
 $flash = getFlash();
 $csrf = generateCSRF();
 
-// Store current filters for POST redirects
-$filterQueryString = '';
-$filterParams = [];
-if ($searchQuery) $filterParams['search'] = $searchQuery;
-if ($ratingFilter) $filterParams['rating'] = $ratingFilter;
-if ($statusFilter !== '') $filterParams['status'] = $statusFilter;
-if ($productFilter) $filterParams['product'] = $productFilter;
-if ($currentPage > 1) $filterParams['page'] = $currentPage;
-if (!empty($filterParams)) {
-    $filterQueryString = '&' . http_build_query($filterParams);
-}
 ?>
 
 <!DOCTYPE html>
@@ -1110,21 +1099,16 @@ if (!empty($filterParams)) {
                                 of <?php echo $pagination['total']; ?> reviews
                             </div>
                             <div class="pagination" style="margin-top:0">
-                                <?php
-                                    $queryParams = [];
-                                    if ($searchQuery) $queryParams['search'] = $searchQuery;
-                                    if ($ratingFilter) $queryParams['rating'] = $ratingFilter;
-                                    if ($statusFilter !== '') $queryParams['status'] = $statusFilter;
-                                    if ($productFilter) $queryParams['product'] = $productFilter;
-                                    $queryString = !empty($queryParams) ? '&' . http_build_query($queryParams) : '';
-                                ?>
-
                                 <?php if ($pagination['has_prev']): ?>
-                                    <a href="reviews.php?page=<?php echo $pagination['page'] - 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-left"></i>
+                                    <a href="reviews.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                    <a href="reviews.php<?php echo buildQueryParams(['page' => $pagination['page'] - 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-left"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
                                 <?php endif; ?>
 
                                 <?php
@@ -1132,14 +1116,14 @@ if (!empty($filterParams)) {
                                     $endPage = min($pagination['total_pages'], $pagination['page'] + 2);
 
                                     if ($startPage > 1): ?>
-                                        <a href="reviews.php?page=1<?php echo $queryString; ?>" class="page-btn">1</a>
+                                        <a href="reviews.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn">1</a>
                                         <?php if ($startPage > 2): ?>
                                             <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
                                         <?php endif; ?>
                                     <?php endif; ?>
 
                                     <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                        <a href="reviews.php?page=<?php echo $p; ?><?php echo $queryString; ?>"
+                                        <a href="reviews.php<?php echo buildQueryParams(['page' => $p]); ?>"
                                            class="page-btn <?php echo $p === $pagination['page'] ? 'active' : ''; ?>">
                                             <?php echo $p; ?>
                                         </a>
@@ -1149,17 +1133,21 @@ if (!empty($filterParams)) {
                                         <?php if ($endPage < $pagination['total_pages'] - 1): ?>
                                             <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
                                         <?php endif; ?>
-                                        <a href="reviews.php?page=<?php echo $pagination['total_pages']; ?><?php echo $queryString; ?>" class="page-btn">
+                                        <a href="reviews.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn">
                                             <?php echo $pagination['total_pages']; ?>
                                         </a>
                                     <?php endif; ?>
 
                                 <?php if ($pagination['has_next']): ?>
-                                    <a href="reviews.php?page=<?php echo $pagination['page'] + 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-right"></i>
+                                    <a href="reviews.php<?php echo buildQueryParams(['page' => $pagination['page'] + 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                    <a href="reviews.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-double-right"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-right"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -1196,7 +1184,7 @@ if (!empty($filterParams)) {
                     <i class="fas fa-trash-alt"></i>
                 </div>
                 <h3>Delete Review?</h3>
-                <p id="deleteReviewName">This action cannot be undone. The review will be permanently deleted.</p>
+                <p id="deleteReviewName">This action cannot be undone. The review by <strong>${name}</strong> will be permanently deleted.</p>
                 <div class="confirm-btns">
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button class="btn btn-danger" id="confirmDeleteBtn">Delete Review</button>

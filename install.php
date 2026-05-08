@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['run_install'])) {
         try {
             // 1. Test DB connection
             $pdo = new PDO(
-                "mysql:host={$dbHost};charset=utf8mb4",
+                "mysql:host={$dbHost};charset=utf8mb4;unix_socket=/run/mysqld/mysqld.sock",
                 $dbUser, $dbPass,
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
             );

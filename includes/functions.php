@@ -8,6 +8,57 @@ session_start();
 require_once __DIR__ . '/../config/database.php';
 
 // ============================================
+// CONFIGURATION & CONSTANTS
+// ============================================
+define('CSRF_TOKEN_LIFETIME', 3600);
+define('UPLOAD_MAX_SIZE', 5 * 1024 * 1024);
+define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
+define('UPLOAD_PATH', __DIR__ . '/../uploads/');
+define('ADMIN_PER_PAGE', 10);
+define('CURRENCY_SYMBOL', '₹');
+
+/**
+ * Build URL query parameters
+ */
+function buildQueryParams($newParams) {
+    $params = array_merge($_GET, $newParams);
+    $query = http_build_query($params);
+    return $query ? '?' . $query : '';
+}
+
+// ============================================
+// DATABASE CONNECTION
+// ============================================
+
+/**
+ * Get Database Connection
+ */
+function getDB() {
+    static $db = null;
+    if ($db === null) {
+        try {
+            $dsn = "mysql:charset=utf8mb4";
+            if (defined('DB_SOCKET') && !empty(DB_SOCKET)) {
+                $dsn .= ";unix_socket=" . DB_SOCKET;
+            } else {
+                $dsn .= ";host=" . DB_HOST;
+            }
+            $dsn .= ";dbname=" . DB_NAME;
+
+            $db = new PDO($dsn, DB_USER, DB_PASS, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+        } catch (PDOException $e) {
+            error_log("Database Connection Error: " . $e->getMessage());
+            die("Database connection failed. Please try again later.");
+        }
+    }
+    return $db;
+}
+
+// ============================================
 // SECURITY FUNCTIONS
 // ============================================
 

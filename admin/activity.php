@@ -752,57 +752,47 @@ function buildActivityDescription($activity) {
                                 of <?php echo $pagination['total']; ?> records
                             </div>
                             <div class="pagination" style="margin-top:0">
-                                <?php
-                                    $queryParams = [];
-                                    if ($searchQuery)  $queryParams['search'] = $searchQuery;
-                                    if ($actionFilter) $queryParams['action_type'] = $actionFilter;
-                                    if ($entityFilter) $queryParams['entity_type'] = $entityFilter;
-                                    if ($dateFrom)     $queryParams['date_from'] = $dateFrom;
-                                    if ($dateTo)       $queryParams['date_to'] = $dateTo;
-                                    $queryString = !empty($queryParams) ? '&' . http_build_query($queryParams) : '';
-                                ?>
-
                                 <?php if ($pagination['has_prev']): ?>
-                                    <a href="activity.php?page=<?php echo $pagination['page'] - 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-left"></i>
+                                    <a href="activity.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn" data-tooltip="First Page">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                    <a href="activity.php<?php echo buildQueryParams(['page' => $pagination['page'] - 1]); ?>" class="page-btn" data-tooltip="Previous">
+                                        <i class="fas fa-angle-left"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
                                 <?php endif; ?>
 
                                 <?php
                                     $startPage = max(1, $pagination['page'] - 2);
                                     $endPage = min($pagination['total_pages'], $pagination['page'] + 2);
 
-                                    if ($startPage > 1): ?>
-                                        <a href="activity.php?page=1<?php echo $queryString; ?>" class="page-btn">1</a>
-                                        <?php if ($startPage > 2): ?>
-                                            <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
+                                    if ($startPage > 1) {
+                                        echo '<span style="color: var(--text-muted); padding: 0 4px;">&hellip;</span>';
+                                    }
 
-                                    <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                        <a href="activity.php?page=<?php echo $p; ?><?php echo $queryString; ?>"
+                                    for ($p = $startPage; $p <= $endPage; $p++): ?>
+                                        <a href="activity.php<?php echo buildQueryParams(['page' => $p]); ?>"
                                            class="page-btn <?php echo $p === $pagination['page'] ? 'active' : ''; ?>">
                                             <?php echo $p; ?>
                                         </a>
                                     <?php endfor; ?>
 
-                                    <?php if ($endPage < $pagination['total_pages']): ?>
-                                        <?php if ($endPage < $pagination['total_pages'] - 1): ?>
-                                            <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
-                                        <?php endif; ?>
-                                        <a href="activity.php?page=<?php echo $pagination['total_pages']; ?><?php echo $queryString; ?>" class="page-btn">
-                                            <?php echo $pagination['total_pages']; ?>
-                                        </a>
-                                    <?php endif; ?>
+                                    <?php if ($endPage < $pagination['total_pages']) {
+                                        echo '<span style="color: var(--text-muted); padding: 0 4px;">&hellip;</span>';
+                                    } ?>
 
                                 <?php if ($pagination['has_next']): ?>
-                                    <a href="activity.php?page=<?php echo $pagination['page'] + 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-right"></i>
+                                    <a href="activity.php<?php echo buildQueryParams(['page' => $pagination['page'] + 1]); ?>" class="page-btn" data-tooltip="Next">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                    <a href="activity.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn" data-tooltip="Last Page">
+                                        <i class="fas fa-angle-double-right"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-right"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
                                 <?php endif; ?>
                             </div>
                         </div>

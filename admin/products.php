@@ -166,18 +166,6 @@ try {
 // ============================================
 $flash = getFlash();
 
-// ============================================
-// HELPER: Build query string preserving filters
-// ============================================
-function buildQueryParams($overrides = []) {
-    $params = [];
-    if (!empty($_GET['search']))  $params['search']   = $_GET['search'];
-    if (!empty($_GET['category'])) $params['category'] = $_GET['category'];
-    if (!empty($_GET['status']))  $params['status']   = $_GET['status'];
-    if (!empty($_GET['sort']))    $params['sort']     = $_GET['sort'];
-    $params = array_merge($params, $overrides);
-    return !empty($params) ? '?' . http_build_query($params) : '';
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">

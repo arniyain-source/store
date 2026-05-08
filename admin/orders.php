@@ -989,22 +989,16 @@ $csrf = generateCSRF();
                                 of <?php echo $pagination['total']; ?> orders
                             </div>
                             <div class="pagination" style="margin-top:0">
-                                <?php 
-                                    $queryParams = [];
-                                    if ($statusFilter) $queryParams['status'] = $statusFilter;
-                                    if ($searchQuery) $queryParams['search'] = $searchQuery;
-                                    if ($paymentFilter) $queryParams['payment_status'] = $paymentFilter;
-                                    if ($dateFrom) $queryParams['date_from'] = $dateFrom;
-                                    if ($dateTo) $queryParams['date_to'] = $dateTo;
-                                    $queryString = !empty($queryParams) ? '&' . http_build_query($queryParams) : '';
-                                ?>
-                                
                                 <?php if ($pagination['has_prev']): ?>
-                                    <a href="orders.php?page=<?php echo $pagination['page'] - 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-left"></i>
+                                    <a href="orders.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                    <a href="orders.php<?php echo buildQueryParams(['page' => $pagination['page'] - 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-left"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
                                 <?php endif; ?>
                                 
                                 <?php 
@@ -1012,14 +1006,14 @@ $csrf = generateCSRF();
                                     $endPage = min($pagination['total_pages'], $pagination['page'] + 2);
                                     
                                     if ($startPage > 1): ?>
-                                        <a href="orders.php?page=1<?php echo $queryString; ?>" class="page-btn">1</a>
+                                        <a href="orders.php<?php echo buildQueryParams(['page' => 1]); ?>" class="page-btn">1</a>
                                         <?php if ($startPage > 2): ?>
                                             <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                     
                                     <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                        <a href="orders.php?page=<?php echo $p; ?><?php echo $queryString; ?>" 
+                                        <a href="orders.php<?php echo buildQueryParams(['page' => $p]); ?>" 
                                            class="page-btn <?php echo $p === $pagination['page'] ? 'active' : ''; ?>">
                                             <?php echo $p; ?>
                                         </a>
@@ -1029,17 +1023,21 @@ $csrf = generateCSRF();
                                         <?php if ($endPage < $pagination['total_pages'] - 1): ?>
                                             <span class="page-btn" style="border:none;background:none;color:var(--text-muted)">...</span>
                                         <?php endif; ?>
-                                        <a href="orders.php?page=<?php echo $pagination['total_pages']; ?><?php echo $queryString; ?>" class="page-btn">
+                                        <a href="orders.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn">
                                             <?php echo $pagination['total_pages']; ?>
                                         </a>
                                     <?php endif; ?>
                                     
                                 <?php if ($pagination['has_next']): ?>
-                                    <a href="orders.php?page=<?php echo $pagination['page'] + 1; ?><?php echo $queryString; ?>" class="page-btn">
-                                        <i class="fas fa-chevron-right"></i>
+                                    <a href="orders.php<?php echo buildQueryParams(['page' => $pagination['page'] + 1]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                    <a href="orders.php<?php echo buildQueryParams(['page' => $pagination['total_pages']]); ?>" class="page-btn">
+                                        <i class="fas fa-angle-double-right"></i>
                                     </a>
                                 <?php else: ?>
-                                    <button class="page-btn" disabled><i class="fas fa-chevron-right"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-right"></i></button>
+                                    <button class="page-btn" disabled><i class="fas fa-angle-double-right"></i></button>
                                 <?php endif; ?>
                             </div>
                         </div>
