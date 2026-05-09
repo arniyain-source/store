@@ -284,7 +284,7 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
                         } catch (Exception $e) {}
 
                         foreach ($recentActivities as $act):
-                            $details = json_decode($act['details'], true);
+                            $details = !empty($act['details']) ? json_decode($act['details'], true) : [];
                         ?>
                         <div class="activity-item">
                             <div class="activity-point"></div>
@@ -315,7 +315,7 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
         try {
             $data = getSalesChartData(30);
             $labels = []; $revenue = [];
-            $dataMap = []; foreach ($data as $r) $dataMap[$row['date']] = $r;
+            $dataMap = []; foreach ($data as $r) $dataMap[$r['date']] = $r;
             for ($i = 29; $i >= 0; $i--) {
                 $date = date('Y-m-d', strtotime("-{$i} days"));
                 $labels[] = date('d M', strtotime($date));

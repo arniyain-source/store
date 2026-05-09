@@ -39,9 +39,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_notification_set
 
 $csrf = generateCSRF();
 $pageTitle = "Notification & Alert Settings";
-require_once __DIR__ . '/includes/layout.php';
+
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesiVastra Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
+</head>
+<body>
+<div class="admin-layout">
+    <?php require_once __DIR__ . '/includes/layout.php'; ?>
 <div class="page-content">
     <div class="page-header">
         <div>
@@ -359,4 +373,8 @@ require_once __DIR__ . '/includes/layout.php';
     }
 </style>
 
-<?php require_once __DIR__ . '/includes/layout.php'; ?>
+<?php  ?>
+</div>
+</div>
+</body>
+</html>

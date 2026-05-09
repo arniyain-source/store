@@ -74,6 +74,94 @@
 
     </div> <!-- Close .app-container -->
 
+    <!-- Support Popup Modal -->
+    <div id="support-overlay" class="support-overlay" onclick="closeSupportPopup()"></div>
+    <div id="support-popup" class="support-popup">
+        <div class="support-popup-header">
+            <div class="support-popup-icon">
+                <i class="fa-solid fa-headset"></i>
+            </div>
+            <div>
+                <h3>Support Center</h3>
+                <p>We're online &amp; ready to help</p>
+            </div>
+            <button class="close-btn-styled" onclick="closeSupportPopup()" aria-label="Close Support"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="support-popup-status">
+            <span class="status-dot"></span> Available 24/7 &middot; Avg. response &lt; 2 min
+        </div>
+        <div class="support-popup-actions">
+            <a href="https://wa.me/919876543210" class="support-action-btn whatsapp-btn">
+                <div class="s-btn-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                <div class="s-btn-text">
+                    <span class="s-btn-title">Chat on WhatsApp</span>
+                    <span class="s-btn-sub">Instant reply guaranteed</span>
+                </div>
+                <i class="fa-solid fa-chevron-right s-arrow"></i>
+            </a>
+            <a href="tel:+919876543210" class="support-action-btn call-btn">
+                <div class="s-btn-icon"><i class="fa-solid fa-phone"></i></div>
+                <div class="s-btn-text">
+                    <span class="s-btn-title">Call Us Now</span>
+                    <span class="s-btn-sub">+91 98765 43210</span>
+                </div>
+                <i class="fa-solid fa-chevron-right s-arrow"></i>
+            </a>
+        </div>
+        <div class="support-popup-footer">
+            <i class="fa-solid fa-shield-halved"></i> Your privacy is protected
+        </div>
+    </div>
+
+    <!-- Drawers -->
+    <div class="overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+    <div id="menu-drawer" class="drawer-left">
+        <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <i class="fa-solid fa-circle-user fa-2x" style="color:var(--text-secondary)"></i>
+                <h2 id="guest-greeting" style="font-weight:600;">Hello, Guest</h2>
+            </div>
+            <button class="close-btn-styled" onclick="toggleMenu()" aria-label="Close Menu"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-body">
+            <ul class="menu-list">
+                <li class="menu-title" style="margin-top: 10px;">Trending</li>
+                <li class="menu-link" onclick="window.location.href='shop.php'"><div class="m-left"><i class="fa-solid fa-fire"></i> Best Sellers</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-link" onclick="window.location.href='shop.php'"><div class="m-left"><i class="fa-solid fa-bolt"></i> New Releases</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-title">Shop by Category</li>
+                <li class="menu-link" onclick="window.location.href='shop.php'"><div class="m-left"><i class="fa-regular fa-clock"></i> Watches</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-link" onclick="window.location.href='shop.php'"><div class="m-left"><i class="fa-regular fa-gem"></i> Jewelry</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-link" onclick="window.location.href='shop.php'"><div class="m-left"><i class="fa-solid fa-glasses"></i> Accessories</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-title">Account</li>
+                <li class="menu-link" onclick="handleAccountClick()"><div class="m-left"><i class="fa-regular fa-user"></i> Your Account</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-link" onclick="handleAccountClick()"><div class="m-left"><i class="fa-solid fa-box-open"></i> Your Orders</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+                <li class="menu-link" onclick="openRightDrawer('wishlist')"><div class="m-left"><i class="fa-regular fa-heart"></i> Wishlist</div> <i class="fa-solid fa-chevron-right arrow"></i></li>
+            </ul>
+            <div class="drawer-footer-menu">
+                <p class="drawer-f-title">Support & Info</p>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms & Conditions</a>
+                <a href="#">About ARNiya</a>
+                <a href="mailto:support@arniyahub.com"><i class="fa-solid fa-envelope" style="margin-right:8px;"></i>support@arniyahub.com</a>
+                
+                <div class="drawer-socials">
+                    <i class="fa-brands fa-instagram"></i>
+                    <i class="fa-brands fa-facebook-f"></i>
+                    <i class="fa-brands fa-twitter"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="right-overlay" onclick="closeRightDrawer()"></div>
+    <div id="right-drawer" class="drawer-right">
+        <div class="drawer-header-right">
+            <h3 id="drawer-title" style="font-size: 18px;">Drawer</h3>
+            <button class="close-btn-styled" onclick="closeRightDrawer()" aria-label="Close Drawer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="drawer-content" class="drawer-body"></div>
+    </div>
+
     <!-- Global UI Components -->
     <div id="toast-container"></div>
 

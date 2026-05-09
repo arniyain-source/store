@@ -45,14 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $slug = generateUniqueSlug($name, 'products');
 
             $stmt = $db->prepare("INSERT INTO products (
-                name, slug, sku, price, old_price, stock, category_id, 
-                fabric, work, colors, description, meta_title, meta_description, is_active
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                name, slug, sku, price, old_price, stock, category_id,
+                fabric, work, blouse_details, colors, description,
+                reseller_price, wholesale_price, purchase_cost, video_url,
+                meta_title, meta_description, is_active
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             $stmt->execute([
-                $name, $slug, $sku, $price, ($salePrice > 0 ? $price : null), $stock, 
-                ($categoryId > 0 ? $categoryId : null), $fabric, $work, $color, 
-                $description, $metaTitle, $metaDesc, $status
+                $name, $slug, $sku, $price, ($salePrice > 0 ? $price : null), $stock,
+                ($categoryId > 0 ? $categoryId : null),
+                $fabric, $work, '',   // blouse_details NOT NULL → ''
+                $color, $description,
+                0, 0, 0, '',          // reseller/wholesale/purchase NOT NULL → 0, video_url → ''
+                $metaTitle, $metaDesc, $status
             ]);
 
             $productId = $db->lastInsertId();

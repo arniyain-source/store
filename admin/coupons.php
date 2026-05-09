@@ -211,7 +211,7 @@ if ($statusFilter === 'active') {
 } elseif ($statusFilter === 'inactive') {
     $whereConditions[] = "is_active = 0";
 } elseif ($statusFilter === 'expired') {
-    $whereConditions[] = "valid_to < NOW()";
+    $whereConditions[] = "valid_to < datetime('now')";
 }
 
 $whereClause = implode(' AND ', $whereConditions);
@@ -237,10 +237,10 @@ try {
     $stmt = $db->query("SELECT COUNT(*) as total FROM coupons");
     $stats['total'] = (int)$stmt->fetch()['total'];
 
-    $stmt = $db->query("SELECT COUNT(*) as active FROM coupons WHERE is_active = 1 AND (valid_to IS NULL OR valid_to >= NOW())");
+    $stmt = $db->query("SELECT COUNT(*) as active FROM coupons WHERE is_active = 1 AND (valid_to IS NULL OR valid_to >= datetime('now'))");
     $stats['active'] = (int)$stmt->fetch()['active'];
 
-    $stmt = $db->query("SELECT COUNT(*) as expired FROM coupons WHERE valid_to IS NOT NULL AND valid_to < NOW()");
+    $stmt = $db->query("SELECT COUNT(*) as expired FROM coupons WHERE valid_to IS NOT NULL AND valid_to < datetime('now')");
     $stats['expired'] = (int)$stmt->fetch()['expired'];
 
     $stmt = $db->query("SELECT COALESCE(SUM(usage_count), 0) as total_usage FROM coupons");

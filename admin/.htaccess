@@ -1,28 +1,14 @@
-# ============================================
-# Admin Panel .htaccess - Extra Security
-# ============================================
+# Admin Panel Security
 
-# Prevent direct access to PHP includes
-<FilesMatch "layout\.php$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+    <FilesMatch "layout\.php$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
 
-# Additional security for admin area
-<IfModule mod_headers.c>
-    Header set X-Robots-Tag "noindex, nofollow"
-</IfModule>
-
-# Prevent clickjacking on admin panel
-<IfModule mod_headers.c>
-    Header always set X-Frame-Options "DENY"
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set Cache-Control "no-store, no-cache, must-revalidate"
-    Header always set Pragma "no-cache"
-</IfModule>
-
-# Block direct access to PHP includes directory
-<FilesMatch "^(layout)\.php$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+    <IfModule mod_headers.c>
+        Header set X-Robots-Tag "noindex, nofollow"
+        Header always set X-Frame-Options "DENY"
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set Cache-Control "no-store, no-cache, must-revalidate"
+        Header always set Pragma "no-cache"
+    </IfModule>

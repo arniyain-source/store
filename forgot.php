@@ -15,7 +15,7 @@
     <div class="app-container" style="background: var(--bg-dark);">
 
         <div class="login-container">
-            <a href="login.html" class="close-btn" aria-label="Back to login"><i class="fa-solid fa-xmark"></i></a>
+            <a href="login.php" class="close-btn" aria-label="Back to login"><i class="fa-solid fa-xmark"></i></a>
             <div class="login-header-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1614851099175-e5b30eb6f696?auto=format&fit=crop&w=800&q=80')">
             </div>
             <div class="login-form">
@@ -42,7 +42,7 @@
                 </form>
 
                 <div class="auth-divider"><span>Remember your password?</span></div>
-                <a href="login.html" class="outline-btn full-width auth-link-btn"><i class="fa-solid fa-arrow-left"></i> &nbsp;Back to Login</a>
+                <a href="login.php" class="outline-btn full-width auth-link-btn"><i class="fa-solid fa-arrow-left"></i> &nbsp;Back to Login</a>
             </div>
         </div>
 

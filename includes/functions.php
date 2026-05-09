@@ -3,7 +3,9 @@
  * Common Functions - DesiVastra E-Commerce
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 require_once __DIR__ . '/../config/database.php';
 
@@ -20,7 +22,7 @@ define('CURRENCY_SYMBOL', '₹');
 /**
  * Build URL query parameters
  */
-function buildQueryParams($newParams) {
+function buildQueryParams(array $newParams): string {
     $params = array_merge($_GET, $newParams);
     $query = http_build_query($params);
     return $query ? '?' . $query : '';
@@ -32,24 +34,79 @@ function buildQueryParams($newParams) {
 
 /**
  * Get Database Connection
+ * Supports SQLite (local dev) and MySQL (production) via DB_DRIVER constant
  */
 function getDB() {
     static $db = null;
     if ($db === null) {
         try {
-            $dsn = "mysql:charset=utf8mb4";
-            if (defined('DB_SOCKET') && !empty(DB_SOCKET)) {
-                $dsn .= ";unix_socket=" . DB_SOCKET;
-            } else {
-                $dsn .= ";host=" . DB_HOST;
-            }
-            $dsn .= ";dbname=" . DB_NAME;
+            $driver = defined('DB_DRIVER') ? DB_DRIVER : 'mysql';
 
-            $db = new PDO($dsn, DB_USER, DB_PASS, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
+            if ($driver === 'sqlite') {
+                $db = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]);
+                $db->exec('PRAGMA foreign_keys = ON');
+                $db->exec('PRAGMA journal_mode = WAL');
+                // Use Pdo\Sqlite::createFunction() (PHP 8.5+) or fall back silently
+                $sqFn = function(string $name, callable $fn, int $argc = -1) use ($db): void {
+                    if ($db instanceof Pdo\Sqlite) {
+                        $db->createFunction($name, $fn, $argc);
+                    } elseif (method_exists($db, 'sqliteCreateFunction')) {
+                        // Suppress deprecation on PHP < 8.5 where this is the only option
+                        @$db->sqliteCreateFunction($name, $fn, $argc);
+                    }
+                };
+                $sqFn('NOW', function() { return date('Y-m-d H:i:s'); }, 0);
+                $sqFn('CURDATE', function() { return date('Y-m-d'); }, 0);
+                $sqFn('DATE_FORMAT', function($date, $format) {
+                    $map = ['%Y'=>'Y','%m'=>'m','%d'=>'d','%H'=>'H','%i'=>'i','%s'=>'s','%M'=>'F','%b'=>'M'];
+                    $phpFmt = str_replace(array_keys($map), array_values($map), $format);
+                    return $date ? date($phpFmt, strtotime($date)) : null;
+                }, 2);
+                $sqFn('DATE_SUB', function($date, $interval) {
+                    if (preg_match('/(\d+)\s+(DAY|MONTH|YEAR|HOUR|MINUTE)/i', $interval, $m)) {
+                        return date('Y-m-d H:i:s', strtotime("-{$m[1]} {$m[2]}", strtotime($date)));
+                    }
+                    return $date;
+                }, 2);
+                $sqFn('DATE_ADD', function($date, $interval) {
+                    if (preg_match('/(\d+)\s+(DAY|MONTH|YEAR|HOUR|MINUTE)/i', $interval, $m)) {
+                        return date('Y-m-d H:i:s', strtotime("+{$m[1]} {$m[2]}", strtotime($date)));
+                    }
+                    return $date;
+                }, 2);
+                $sqFn('DATEDIFF', function($d1, $d2) {
+                    return round((strtotime($d1) - strtotime($d2)) / 86400);
+                }, 2);
+                $sqFn('TIMESTAMPDIFF', function($unit, $d1, $d2) {
+                    $diff = strtotime($d2) - strtotime($d1);
+                    switch (strtoupper($unit)) {
+                        case 'DAY':    return (int)($diff / 86400);
+                        case 'HOUR':   return (int)($diff / 3600);
+                        case 'MINUTE': return (int)($diff / 60);
+                        case 'MONTH':  return (int)($diff / 2592000);
+                        case 'YEAR':   return (int)($diff / 31536000);
+                        default: return $diff;
+                    }
+                }, 3);
+                $sqFn('CONCAT', function() { return implode('', func_get_args()); });
+                $sqFn('IF', function($cond, $true, $false) { return $cond ? $true : $false; }, 3);
+            } else {
+                $dsn = "mysql:charset=utf8mb4";
+                if (defined('DB_SOCKET') && !empty(DB_SOCKET)) {
+                    $dsn .= ";unix_socket=" . DB_SOCKET;
+                } else {
+                    $dsn .= ";host=" . DB_HOST;
+                }
+                $dsn .= ";dbname=" . DB_NAME;
+                $db = new PDO($dsn, DB_USER, DB_PASS, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]);
+            }
         } catch (PDOException $e) {
             error_log("Database Connection Error: " . $e->getMessage());
             die("Database connection failed. Please try again later.");
@@ -76,7 +133,7 @@ function generateCSRF() {
 /**
  * Verify CSRF Token
  */
-function verifyCSRF($token) {
+function verifyCSRF(string $token): bool {
     if (empty($token) || empty($_SESSION['csrf_token'])) {
         return false;
     }
@@ -86,18 +143,18 @@ function verifyCSRF($token) {
 /**
  * Sanitize input
  */
-function sanitize($data) {
+function sanitize(mixed $data): mixed {
     if (is_array($data)) {
         return array_map('sanitize', $data);
     }
-    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(trim($data ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 /**
  * Clean string for output
  */
-function clean($str) {
-    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+function clean(mixed $str): string {
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 // ============================================
@@ -141,7 +198,7 @@ function getCurrentAdmin() {
 /**
  * Admin login
  */
-function adminLogin($email, $password) {
+function adminLogin(string $email, string $password): array {
     $db = getDB();
     $stmt = $db->prepare("SELECT id, name, email, password, role FROM admins WHERE email = ? AND status = 1");
     $stmt->execute([$email]);
@@ -208,14 +265,14 @@ function getAdminUrl($path = '') {
 /**
  * Format price with currency
  */
-function formatPrice($amount) {
+function formatPrice(float|int $amount): string {
     return CURRENCY_SYMBOL . number_format((float)$amount, 2);
 }
 
 /**
  * Format Indian price (e.g., ₹1,23,456.00)
  */
-function formatIndianPrice($amount) {
+function formatIndianPrice(float|int $amount): string {
     $amount = (float)$amount;
     $decimals = ($amount == floor($amount)) ? 0 : 2;
     $formatted = number_format($amount, $decimals, '.', '');
@@ -242,7 +299,7 @@ function generateOrderNumber() {
 /**
  * Generate slug from string
  */
-function generateSlug($string) {
+function generateSlug(string $string): string {
     $slug = preg_replace('/[^a-zA-Z0-9\s-]/', '', strtolower($string));
     $slug = preg_replace('/[\s-]+/', '-', $slug);
     $slug = trim($slug, '-');
@@ -252,7 +309,7 @@ function generateSlug($string) {
 /**
  * Generate unique slug
  */
-function generateUniqueSlug($string, $table, $excludeId = null) {
+function generateUniqueSlug(string $string, string $table, ?int $excludeId = null): string {
     $db = getDB();
     $slug = generateSlug($string);
     $originalSlug = $slug;
@@ -277,7 +334,7 @@ function generateUniqueSlug($string, $table, $excludeId = null) {
 /**
  * Upload file with validation
  */
-function uploadFile($file, $subfolder = 'products', $allowedTypes = null) {
+function uploadFile(array $file, string $subfolder = 'products', ?array $allowedTypes = null): array {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         return ['success' => false, 'message' => 'No file uploaded or upload error.'];
     }
@@ -287,9 +344,9 @@ function uploadFile($file, $subfolder = 'products', $allowedTypes = null) {
     }
     
     $types = $allowedTypes ?? ALLOWED_IMAGE_TYPES;
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mimeType = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
+    $finfo    = new \finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->file($file['tmp_name']);
+    unset($finfo); // explicit release (no finfo_close needed)
     
     if (!in_array($mimeType, $types)) {
         return ['success' => false, 'message' => 'Invalid file type.'];
@@ -314,7 +371,7 @@ function uploadFile($file, $subfolder = 'products', $allowedTypes = null) {
 /**
  * Delete uploaded file
  */
-function deleteUploadedFile($path) {
+function deleteUploadedFile(?string $path): void {
     if ($path && file_exists(dirname(__DIR__) . '/' . $path)) {
         unlink(dirname(__DIR__) . '/' . $path);
     }
@@ -323,7 +380,7 @@ function deleteUploadedFile($path) {
 /**
  * Paginate results
  */
-function paginate($query, $params, $page = 1, $perPage = ADMIN_PER_PAGE) {
+function paginate(string $query, array $params, int $page = 1, int $perPage = ADMIN_PER_PAGE): array {
     $db = getDB();
     $page = max(1, (int)$page);
     $offset = ($page - 1) * $perPage;
@@ -354,7 +411,7 @@ function paginate($query, $params, $page = 1, $perPage = ADMIN_PER_PAGE) {
 /**
  * Log admin activity
  */
-function logActivity($action, $entityType = null, $entityId = null, $details = null) {
+function logActivity(string $action, ?string $entityType = null, int|string|null $entityId = null, ?array $details = null): void {
     try {
         $db = getDB();
         $stmt = $db->prepare("INSERT INTO activity_log (admin_id, action, entity_type, entity_id, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -375,7 +432,7 @@ function logActivity($action, $entityType = null, $entityId = null, $details = n
 /**
  * Get settings value
  */
-function getSetting($key, $default = null) {
+function getSetting(string $key, mixed $default = null): mixed {
     $db = getDB();
     $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
     $stmt->execute([$key]);
@@ -386,7 +443,7 @@ function getSetting($key, $default = null) {
 /**
  * Update setting value
  */
-function updateSetting($key, $value) {
+function updateSetting(string $key, mixed $value): bool {
     $db = getDB();
     $stmt = $db->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?");
     return $stmt->execute([$value, $key]);
@@ -395,7 +452,7 @@ function updateSetting($key, $value) {
 /**
  * JSON response
  */
-function jsonResponse($data, $statusCode = 200) {
+function jsonResponse(mixed $data, int $statusCode = 200): never {
     http_response_code($statusCode);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
@@ -405,7 +462,7 @@ function jsonResponse($data, $statusCode = 200) {
 /**
  * Redirect
  */
-function redirect($url) {
+function redirect(string $url): never {
     header("Location: {$url}");
     exit;
 }
@@ -413,7 +470,7 @@ function redirect($url) {
 /**
  * Flash message
  */
-function setFlash($type, $message) {
+function setFlash(string $type, string $message): void {
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
 }
 
@@ -432,7 +489,7 @@ function getFlash() {
 /**
  * Time ago
  */
-function timeAgo($datetime) {
+function timeAgo(string $datetime): string {
     $now = new DateTime();
     $ago = new DateTime($datetime);
     $diff = $now->diff($ago);
@@ -448,7 +505,7 @@ function timeAgo($datetime) {
 /**
  * Get order status badge class
  */
-function getStatusBadge($status) {
+function getStatusBadge(string $status): string {
     $badges = [
         'pending' => 'badge-warning',
         'confirmed' => 'badge-info',
@@ -527,13 +584,24 @@ function getRecentOrders($limit = 10) {
  */
 function getSalesChartData($days = 30) {
     $db = getDB();
-    $stmt = $db->prepare("
-        SELECT DATE(created_at) as date, COALESCE(SUM(total), 0) as revenue, COUNT(*) as orders
-        FROM orders 
-        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-    ");
+    $driver = defined('DB_DRIVER') ? DB_DRIVER : 'sqlite';
+    if ($driver === 'sqlite') {
+        $stmt = $db->prepare("
+            SELECT DATE(created_at) as date, COALESCE(SUM(total), 0) as revenue, COUNT(*) as orders
+            FROM orders
+            WHERE DATE(created_at) >= DATE('now', '-' || ? || ' days')
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ");
+    } else {
+        $stmt = $db->prepare("
+            SELECT DATE(created_at) as date, COALESCE(SUM(total), 0) as revenue, COUNT(*) as orders
+            FROM orders
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        ");
+    }
     $stmt->execute([$days]);
     return $stmt->fetchAll();
 }

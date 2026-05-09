@@ -134,9 +134,9 @@ try {
     redirect('orders.php');
 }
 
-// Parse shipping address JSON
-$shippingAddress = json_decode($order['shipping_address'], true);
-$billingAddress  = json_decode($order['billing_address'], true);
+// Parse shipping address JSON — guard against NULL and empty string
+$shippingAddress = (!empty($order['shipping_address'])) ? json_decode($order['shipping_address'], true) : null;
+$billingAddress  = (!empty($order['billing_address']))  ? json_decode($order['billing_address'],  true) : null;
 
 // Flash message
 $flash = getFlash();
@@ -1135,7 +1135,7 @@ $statusOptions = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 
                                 <?php else: ?>
                                     <?php foreach ($timelineEntries as $i => $entry): ?>
                                         <?php
-                                            $details = json_decode($entry['details'], true);
+                                            $details = !empty($entry['details']) ? json_decode($entry['details'], true) : [];
                                             $isFirst = $i === 0;
                                             $itemClass = $isFirst ? 'active' : '';
 

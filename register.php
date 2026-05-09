@@ -16,7 +16,7 @@
     <div class="app-container" style="background: var(--bg-dark);">
 
         <div class="login-container">
-            <a href="login.html" class="close-btn" aria-label="Close"><i class="fa-solid fa-xmark"></i></a>
+            <a href="login.php" class="close-btn" aria-label="Close"><i class="fa-solid fa-xmark"></i></a>
             <div class="login-header-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&w=800&q=80')">
             </div>
             <div class="login-form">
@@ -106,7 +106,7 @@
                 </form>
 
                 <div class="auth-divider"><span>Already have an account?</span></div>
-                <a href="login.html" class="outline-btn full-width auth-link-btn">Sign In Instead</a>
+                <a href="login.php" class="outline-btn full-width auth-link-btn">Sign In Instead</a>
             </div>
         </div>
 
@@ -180,7 +180,7 @@
             if (business) localStorage.setItem('arniyaBusiness', business);
 
             showToast('Account created successfully!');
-            setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+            setTimeout(() => { window.location.href = 'dashboard.php'; }, 800);
         }
     </script>
 </body>

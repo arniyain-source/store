@@ -204,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Delete removed additional images from disk
             if ($isEdit && !empty($defaults['images'])) {
-                $oldImages = is_array($defaults['images']) ? $defaults['images'] : (json_decode($defaults['images'], true) ?: []);
+                $oldImages = is_array($defaults['images']) ? $defaults['images'] : (json_decode((string)($defaults['images'] ?? '[]'), true) ?: []);
                 foreach ($oldImages as $oldImg) {
                     if (!in_array($oldImg, $existingImages)) {
                         deleteUploadedFile($oldImg);
@@ -245,10 +245,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([
                     $name, $slug, $sku ?: null, $categoryId ?: null,
                     $shortDescription ?: null, $description ?: null,
-                    $fabric ?: null, $work ?: null, $blouseDetails ?: null,
-                    $priceVal, $oldPriceVal, $resellerPriceVal, $wholesalePriceVal, $purchaseCostVal,
+                    $fabric ?: '',  $work ?: '',  $blouseDetails ?: '',   // NOT NULL cols: use '' not null
+                    $priceVal, $oldPriceVal, $resellerPriceVal ?? 0, $wholesalePriceVal ?? 0, $purchaseCostVal ?? 0,
                     $stock, $lowStockThreshold,
-                    $mainImage ?: null, $videoUrl ?: null, json_encode($allImages),
+                    $mainImage ?: null, $videoUrl ?: '', json_encode($allImages),
                     json_encode($sizes), json_encode($colors), json_encode($finishes), json_encode($tags),
                     $isActive, $isFeatured, $isNewArrival,
                     $isTopSelling, $isBoutiqueOnly,
@@ -295,10 +295,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([
                     $name, $slug, $sku ?: null, $categoryId ?: null,
                     $shortDescription ?: null, $description ?: null,
-                    $fabric ?: null, $work ?: null, $blouseDetails ?: null,
-                    $priceVal, $oldPriceVal, $resellerPriceVal, $wholesalePriceVal, $purchaseCostVal,
+                    $fabric ?: '',  $work ?: '',  $blouseDetails ?: '',   // NOT NULL cols: use '' not null
+                    $priceVal, $oldPriceVal, $resellerPriceVal ?? 0, $wholesalePriceVal ?? 0, $purchaseCostVal ?? 0,
                     $stock, $lowStockThreshold,
-                    $mainImage ?: null, $videoUrl ?: null, json_encode($allImages),
+                    $mainImage ?: null, $videoUrl ?: '', json_encode($allImages),
                     json_encode($sizes), json_encode($colors), json_encode($finishes), json_encode($tags),
                     $isActive, $isFeatured, $isNewArrival,
                     $isTopSelling, $isBoutiqueOnly,
@@ -379,7 +379,7 @@ try {
 $flash = getFlash();
 
 // Shorthand for form values
-function fv($key, $data) {
+function fv(string $key, array $data): string {
     return clean((string)($data[$key] ?? ''));
 }
 ?>

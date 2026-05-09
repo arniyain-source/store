@@ -29,7 +29,7 @@ function renderCheckoutItems() {
                 <i class="fa-solid fa-bag-shopping" style="font-size:30px; color:var(--gold-primary); margin-bottom:12px;"></i>
                 <h4 style="margin-bottom:8px;">No items in cart</h4>
                 <p style="color:var(--text-secondary); line-height:1.6;">Add a few pieces from the boutique before heading to checkout.</p>
-                <a href="shop.html" class="gold-btn" style="display:inline-flex; margin-top:18px;">Return to Shop</a>
+                <a href="shop.php" class="gold-btn" style="display:inline-flex; margin-top:18px;">Return to Shop</a>
             </div>
         `;
         itemCount.innerText = "0 items";
@@ -151,7 +151,7 @@ function placeOrder() {
                 <i class="fa-solid fa-circle-check"></i>
                 <h3>Order Confirmed</h3>
                 <p>Your boutique order <strong>${orderId}</strong> has been placed successfully. A confirmation summary has been saved in your account drawer.</p>
-                <a href="index.html" class="gold-btn" style="display:inline-flex;">Back to Home</a>
+                <a href="index.php" class="gold-btn" style="display:inline-flex;">Back to Home</a>
             `;
         }
 

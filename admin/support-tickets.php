@@ -9,6 +9,27 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 
 $db = getDB();
 
+// Ensure support_tickets table exists (SQLite auto-create)
+try {
+    $db->exec("CREATE TABLE IF NOT EXISTS support_tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticket_no VARCHAR(20) NOT NULL UNIQUE,
+        customer_id INTEGER DEFAULT NULL,
+        customer_name VARCHAR(100) NOT NULL DEFAULT '',
+        mobile VARCHAR(20) DEFAULT NULL,
+        email VARCHAR(150) DEFAULT NULL,
+        subject VARCHAR(255) NOT NULL DEFAULT '',
+        description TEXT DEFAULT NULL,
+        priority VARCHAR(20) DEFAULT 'medium',
+        status VARCHAR(30) DEFAULT 'open',
+        assigned_staff_id INTEGER DEFAULT NULL,
+        resolution TEXT DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+} catch (Exception $e) {}
+
+
 // ============================================
 // HANDLE ACTIONS
 // ============================================
@@ -89,9 +110,23 @@ $staffMembers = $db->query("SELECT id, name FROM admins WHERE status = 1")->fetc
 
 $csrf = generateCSRF();
 
-require_once __DIR__ . '/includes/layout.php';
+
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesiVastra Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
+</head>
+<body>
+<div class="admin-layout">
+    <?php require_once __DIR__ . '/includes/layout.php'; ?>
 <div class="page-content">
     <div class="page-header">
         <div>

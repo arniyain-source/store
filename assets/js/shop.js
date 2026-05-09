@@ -3,7 +3,7 @@ const shopState = {
     category: "All",
     sort: "Most Popular",
     filters: {
-        maxPrice: 5000,
+        maxPrice: 20000,
         categories: [],
         statuses: [],
         sizes: []
@@ -37,7 +37,7 @@ function updateShopUrl() {
     const params = new URLSearchParams();
     if (shopState.query) params.set("query", shopState.query);
     if (shopState.category !== "All") params.set("cat", shopState.category);
-    history.replaceState({}, "", `shop.html${params.toString() ? `?${params.toString()}` : ""}`);
+    history.replaceState({}, "", `shop.php${params.toString() ? `?${params.toString()}` : ""}`);
 }
 
 function parseShopUrlState() {
@@ -75,7 +75,7 @@ function getSelectedSizes() {
 function applyCurrentFiltersToState() {
     const slider = document.querySelector(".price-slider");
     shopState.filters = {
-        maxPrice: slider ? Number(slider.value) : 5000,
+        maxPrice: slider ? Number(slider.value) : 20000,
         categories: getSelectedFilterCategories(),
         statuses: getSelectedStatuses(),
         sizes: getSelectedSizes()
@@ -106,7 +106,7 @@ function matchesStatuses(product) {
         "New Arrivals": product.newArrival,
         "Boutique Only": product.boutiqueOnly
     };
-
+    if (!shopState.filters.statuses.length) return true;
     return shopState.filters.statuses.every((status) => checks[status]);
 }
 
@@ -164,30 +164,37 @@ function renderProducts(products = getVisibleProducts()) {
         return;
     }
 
-    grid.innerHTML = products.map((product) => `
-        <a href="product.html?id=${product.id}" class="p-card">
+    grid.innerHTML = products.map((product) => {
+        // Fallback image if empty
+        const imgUrl = product.img
+            ? product.img
+            : 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?w=540&h=960&fit=crop&q=80';
+        const oldPriceHtml = product.oldPrice && product.oldPrice > product.price
+            ? `<div class="p-card-old">${formatMoney(product.oldPrice)}</div><div class="p-card-discount">${Math.round((1 - product.price / product.oldPrice) * 100)}% OFF</div>`
+            : "";
+        return `
+        <a href="product.php?id=${product.id}" class="p-card">
             <div class="p-card-inner">
-                <div class="p-card-img" style="background-image:url('${product.img}?auto=format&fit=crop&crop=entropy&w=540&h=960&q=80')">
+                <div class="p-card-img" style="background-image:url('${imgUrl}')">
                     <button class="p-card-fav" data-product-id="${product.id}" onclick="toggleFav(event, this)">
                         <i class="fa-regular fa-heart"></i>
                     </button>
                     <div class="p-card-overlay">
                         <div class="p-card-footer-left">
-                            <div class="p-card-title">${product.name}</div>
+                            <div class="p-card-title">${sanitize(product.name)}</div>
                             <div class="p-price-row">
                                 <div class="shop-price-tag">${formatMoney(product.price)}</div>
-                                <div class="p-card-old">${formatMoney(product.oldPrice)}</div>
-                                ${product.oldPrice && product.oldPrice > product.price ? `<div class="p-card-discount">${Math.round((1 - product.price / product.oldPrice) * 100)}% OFF</div>` : ""}
+                                ${oldPriceHtml}
                             </div>
                             <div class="p-card-footer-right">
-                                <div class="color-badge">${product.colors} Colours</div>
+                                <div class="color-badge">${product.colors} Colour${product.colors !== 1 ? 's' : ''}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </a>
-    `).join("");
+        </a>`;
+    }).join("");
 
     if (typeof syncWishlistButtons === "function") {
         syncWishlistButtons();
@@ -471,7 +478,7 @@ function buildLensResults() {
 
     // Exact match card
     document.getElementById("lens-exact-card").innerHTML = exact ? `
-        <a href="product.html?id=${exact.id}" class="lens-exact-item" onclick="closeLens()">
+        <a href="product.php?id=${exact.id}" class="lens-exact-item" onclick="closeLens()">
             <div class="lens-exact-img" style="background-image:url('${exact.img}?auto=format&fit=crop&w=600&q=80')"></div>
             <div class="lens-exact-info">
                 <div class="lens-exact-match-badge">✓ Best Match</div>
@@ -485,7 +492,7 @@ function buildLensResults() {
 
     // Similar products grid
     document.getElementById("lens-results-grid").innerHTML = similar.map(p => `
-        <a href="product.html?id=${p.id}" class="lens-sim-card" onclick="closeLens()">
+        <a href="product.php?id=${p.id}" class="lens-sim-card" onclick="closeLens()">
             <div class="lens-sim-img" style="background-image:url('${p.img}?auto=format&fit=crop&w=400&q=80')"></div>
             <div class="lens-sim-info">
                 <div class="lens-sim-name">${p.name}</div>

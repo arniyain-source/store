@@ -123,11 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $updated++;
             }
 
-            // For any key that might not exist yet, use INSERT ... ON DUPLICATE KEY UPDATE
+        // Upsert each setting (SQLite-compatible INSERT OR REPLACE)
             $insertStmt = $db->prepare("
-                INSERT INTO settings (setting_key, setting_value, setting_type, setting_group, description)
+                INSERT OR REPLACE INTO settings (setting_key, setting_value, setting_type, setting_group, description)
                 VALUES (?, ?, 'text', ?, ?)
-                ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
             ");
 
             $descriptions = [
@@ -210,13 +209,23 @@ if ($zonesJson) {
     }
 }
 
-// Database config for display (masked)
-$dbConfig = [
-    'host'     => DB_HOST,
-    'name'     => DB_NAME,
-    'user'     => DB_USER,
-    'charset'  => DB_CHARSET,
-];
+// Database config for display
+$driver = defined('DB_DRIVER') ? DB_DRIVER : 'sqlite';
+if ($driver === 'sqlite') {
+    $dbConfig = [
+        'host'    => 'localhost (SQLite)',
+        'name'    => defined('DB_SQLITE_PATH') ? DB_SQLITE_PATH : 'store_local.sqlite',
+        'user'    => 'N/A (file-based)',
+        'charset' => 'UTF-8',
+    ];
+} else {
+    $dbConfig = [
+        'host'    => defined('DB_HOST') ? DB_HOST : '',
+        'name'    => defined('DB_NAME') ? DB_NAME : '',
+        'user'    => defined('DB_USER') ? DB_USER : '',
+        'charset' => defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4',
+    ];
+}
 ?>
 
 <!DOCTYPE html>
@@ -728,9 +737,16 @@ $dbConfig = [
                         $tableStatus = [];
                         try {
                             $db = getDB();
+                            $driver = defined('DB_DRIVER') ? DB_DRIVER : 'sqlite';
                             foreach ($tables as $table) {
-                                $stmt = $db->query("SHOW TABLES LIKE '{$table}'");
-                                $tableStatus[$table] = $stmt->fetch() !== false;
+                                if ($driver === 'sqlite') {
+                                    $stmt = $db->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?");
+                                    $stmt->execute([$table]);
+                                    $tableStatus[$table] = $stmt->fetch() !== false;
+                                } else {
+                                    $stmt = $db->query("SHOW TABLES LIKE '{$table}'");
+                                    $tableStatus[$table] = $stmt->fetch() !== false;
+                                }
                             }
                         } catch (Exception $e) {
                             // Can't check tables

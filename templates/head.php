@@ -12,9 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="assets/css/global.css?v=<?php echo time(); ?>">
-    <?php if (isset($extraCSS) && is_array($extraCSS)): ?>
-        <?php foreach ($extraCSS as $css): ?>
-            <link rel="stylesheet" href="assets/css/<?php echo $css; ?>?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/utilities.css?v=<?php echo time(); ?>">
+    <?php if (isset($extraCSS)): ?>
+        <?php $cssFiles = is_array($extraCSS) ? $extraCSS : [$extraCSS]; ?>
+        <?php foreach ($cssFiles as $css): ?>
+            <?php $cssFile = (strpos($css, 'assets/css/') === 0) ? $css : 'assets/css/' . $css; ?>
+            <link rel="stylesheet" href="<?php echo $cssFile; ?>?v=<?php echo time(); ?>">
         <?php endforeach; ?>
     <?php endif; ?>
     

@@ -38,19 +38,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // 2. Finish Database Setup & Seeding
 try {
-    $db->exec("CREATE TABLE IF NOT EXISTS `modules` (
-        `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        `module_key` VARCHAR(50) NOT NULL UNIQUE,
-        `name` VARCHAR(100) NOT NULL,
-        `description` TEXT,
-        `version` VARCHAR(20) DEFAULT '1.0.0',
-        `author` VARCHAR(100),
-        `is_enabled` TINYINT(1) DEFAULT 0,
-        `is_core` TINYINT(1) DEFAULT 0,
-        `settings_url` VARCHAR(255) DEFAULT NULL,
-        `last_updated` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    $db->exec("CREATE TABLE IF NOT EXISTS modules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        module_key VARCHAR(50) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        version VARCHAR(20) DEFAULT '1.0.0',
+        author VARCHAR(100),
+        is_enabled INTEGER DEFAULT 0,
+        is_core INTEGER DEFAULT 0,
+        settings_url VARCHAR(255) DEFAULT NULL,
+        last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
 
     $stmt = $db->query("SELECT COUNT(*) as cnt FROM modules");
     if ($stmt->fetch()['cnt'] == 0) {

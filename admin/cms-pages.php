@@ -6,10 +6,33 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 /**
  * CMS Page Builder - DesiVastra Admin
  */
-require_once __DIR__ . '/admin/includes/layout.php';
+require_once __DIR__ . '/includes/layout.php';
 
 $db = getDB();
 $csrf = generateCSRF();
+
+// Ensure pages table exists
+try {
+    $db->exec("CREATE TABLE IF NOT EXISTS pages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(280) NOT NULL UNIQUE,
+        content TEXT DEFAULT NULL,
+        meta_title VARCHAR(255) DEFAULT NULL,
+        meta_description VARCHAR(500) DEFAULT NULL,
+        status VARCHAR(20) DEFAULT 'draft',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    // Seed default pages
+    $db->exec("INSERT OR IGNORE INTO pages (title, slug, content, status) VALUES
+        ('About Us', 'about-us', '<h2>About DesiVastra</h2><p>We offer premium Indian ethnic wear.</p>', 'published'),
+        ('Privacy Policy', 'privacy-policy', '<h2>Privacy Policy</h2><p>Your data is safe with us.</p>', 'published'),
+        ('Terms of Service', 'terms-of-service', '<h2>Terms of Service</h2><p>Please read our terms carefully.</p>', 'published'),
+        ('Shipping Policy', 'shipping-policy', '<h2>Shipping Policy</h2><p>We ship across India.</p>', 'published')
+    ");
+} catch (Exception $e) {}
+
 
 // ============================================
 // HANDLE ACTIONS (CREATE/UPDATE/DELETE)

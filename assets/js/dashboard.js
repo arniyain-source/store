@@ -23,7 +23,7 @@
 
     // Require login — bounce to login page if not signed in
     if (localStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'login.html';
+        window.location.href = 'login.php';
         return;
     }
 
@@ -193,7 +193,7 @@
         `;
 
         if (!orders.length) {
-            list.innerHTML = emptyState('fa-box-open', 'No orders yet', 'Start exploring our luxury collection to place your first order.', 'shop.html', 'Browse Shop');
+            list.innerHTML = emptyState('fa-box-open', 'No orders yet', 'Start exploring our luxury collection to place your first order.', 'shop.php', 'Browse Shop');
             return;
         }
 
@@ -480,7 +480,7 @@
         if (!list) return;
         const products = (typeof getWishlistProducts === 'function') ? getWishlistProducts() : [];
         if (!products.length) {
-            list.innerHTML = emptyState('fa-heart', 'Your wishlist is empty', 'Save pieces you love to revisit them later.', 'shop.html', 'Discover Products');
+            list.innerHTML = emptyState('fa-heart', 'Your wishlist is empty', 'Save pieces you love to revisit them later.', 'shop.php', 'Discover Products');
             return;
         }
         list.innerHTML = products.map((p) => `

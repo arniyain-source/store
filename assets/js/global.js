@@ -313,7 +313,7 @@ function handleCheckout() {
         showToast("Your cart is empty right now");
         return;
     }
-    window.location.href = "checkout.html";
+    window.location.href = "checkout.php";
 }
 
 function buildCartMeta(item) {
@@ -337,7 +337,7 @@ function renderCartDrawer() {
                 <i class="fa-solid fa-bag-shopping" style="font-size:34px; color:var(--gold-primary); margin-bottom:16px;"></i>
                 <h4 style="margin-bottom:10px; color:#fff;">Your cart is empty</h4>
                 <p style="line-height:1.6; margin-bottom:20px;">Explore the boutique and add a few curated pieces.</p>
-                <button class="gold-btn" onclick="window.location.href='shop.html'">Browse Collection</button>
+                <button class="gold-btn" onclick="window.location.href='shop.php'">Browse Collection</button>
             </div>
         `;
         return;
@@ -396,7 +396,7 @@ function renderWishlistDrawer() {
                 <i class="fa-regular fa-heart" style="font-size:34px; color:var(--gold-primary); margin-bottom:16px;"></i>
                 <h4 style="margin-bottom:10px; color:#fff;">Nothing saved yet</h4>
                 <p style="line-height:1.6; margin-bottom:20px;">Save pieces you want to revisit later.</p>
-                <button class="gold-btn" onclick="window.location.href='shop.html'">Discover Products</button>
+                <button class="gold-btn" onclick="window.location.href='shop.php'">Discover Products</button>
             </div>
         `;
         return;
@@ -446,8 +446,8 @@ function renderAccountDrawer() {
                     <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Recent Orders</div>
                     <strong>${orderCount} completed checkout${orderCount === 1 ? "" : "s"}</strong>
                 </div>
-                <button class="gold-btn full-width" onclick="window.location.href='dashboard.html'">Open Dashboard</button>
-                <button class="outline-btn full-width" onclick="window.location.href='dashboard.html?section=orders'">View Orders</button>
+                <button class="gold-btn full-width" onclick="window.location.href='dashboard.php'">Open Dashboard</button>
+                <button class="outline-btn full-width" onclick="window.location.href='dashboard.php?section=orders'">View Orders</button>
                 <button class="outline-btn full-width" onclick="openRightDrawer('wishlist')">Open Wishlist</button>
                 <button class="outline-btn full-width" onclick="openRightDrawer('cart')">Open Cart</button>
                 <button class="outline-btn full-width" style="border-color:rgba(207,102,121,0.5); color:var(--danger);" onclick="logout()">Logout</button>
@@ -515,19 +515,92 @@ function closeActivePanels() {
 
 function handleAccountClick() {
     if (localStorage.getItem(STORAGE_KEYS.login) !== "true") {
-        window.location.href = "login.html";
+        window.location.href = "login.php";
         return;
     }
-    window.location.href = "dashboard.html";
+    window.location.href = "dashboard.php";
 }
 
 function logout() {
+    fetch('api/user/login.php?action=logout', { method: 'POST' }).catch(() => {});
     localStorage.removeItem(STORAGE_KEYS.login);
     localStorage.removeItem(STORAGE_KEYS.phone);
     showToast("Logged out successfully");
-    setTimeout(() => {
-        window.location.href = "index.html";
-    }, 700);
+    setTimeout(() => { window.location.href = "index.php"; }, 700);
+}
+
+// ── API-wired Add to Cart ──
+function addToCartAPI(productId, name, price, image, sku, size, color, qty) {
+    qty = qty || 1;
+    // Optimistically update local state
+    const existing = mockCart.find(i => i.id === Number(productId) && i.size === (size||'') && i.finish === (color||''));
+    if (existing) { existing.qty += qty; } else {
+        mockCart.push({ id: Number(productId), qty, size: size||'', finish: color||'', name, price: Number(price), oldPrice: Number(price), sku: sku||'', img: image||'', cat: 'Product' });
+    }
+    saveCart();
+    showToast(`${name} added to cart ✓`);
+    // Sync with server session
+    fetch('api/cart/add.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, quantity: qty, size: size||'', color: color||'' })
+    }).then(r => r.json()).then(data => {
+        if (data.cart_count !== undefined) {
+            document.querySelectorAll('.cart-badge').forEach(b => {
+                b.innerText = data.cart_count;
+                b.style.display = data.cart_count > 0 ? 'flex' : 'none';
+            });
+        }
+    }).catch(() => {});
+}
+
+// ── Pincode Delivery Check ──
+function checkDelivery() {
+    const input = document.getElementById('pincode-input');
+    const msgEl = document.querySelector('.del-est-msg');
+    if (!input || !msgEl) return;
+    const pincode = input.value.trim();
+    if (!/^\d{6}$/.test(pincode)) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = '#e74c3c';
+        msgEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Enter a valid 6-digit pincode.';
+        return;
+    }
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Checking...';
+    fetch('api/user/login.php?action=check_pincode&pincode=' + encodeURIComponent(pincode))
+        .then(r => r.json())
+        .then(data => {
+            if (data.deliverable) {
+                msgEl.style.color = '#28c066';
+                msgEl.innerHTML = '<i class="fa-solid fa-truck-fast"></i> ' + data.message;
+            } else {
+                msgEl.style.color = '#e74c3c';
+                msgEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + data.message;
+            }
+        }).catch(() => {
+            msgEl.style.color = '#e74c3c';
+            msgEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Could not check. Try again.';
+        });
+}
+
+// ── Product Wishlist Toggle (product page) ──
+function toggleProductWishlist(btn) {
+    if (!btn) return;
+    toggleWishlistButton(btn);
+}
+
+// ── Share Product ──
+function shareProduct() {
+    const url = window.location.href;
+    const title = (typeof currentProduct !== 'undefined' ? currentProduct.name : document.title) || document.title;
+    if (navigator.share) {
+        navigator.share({ title, url }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => showToast('Link copied!')).catch(() => {
+            window.prompt('Copy this link:', url);
+        });
+    }
 }
 
 function showToast(message) {
@@ -569,7 +642,7 @@ function handleSearch(inputId, catId) {
 
     showToast(`Searching for "${query}"`);
     setTimeout(() => {
-        window.location.href = `shop.html?${params.toString()}`;
+        window.location.href = `shop.php?${params.toString()}`;
     }, 250);
 }
 
@@ -622,7 +695,7 @@ function hydrateGreeting() {
 }
 
 function applyNavActiveState() {
-    const currentPage = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+    const currentPage = (window.location.pathname.split("/").pop() || "index.php").toLowerCase();
     document.querySelectorAll(".nav-item[href]").forEach((item) => {
         const target = item.getAttribute("href");
         item.classList.toggle("active", currentPage === target.toLowerCase());

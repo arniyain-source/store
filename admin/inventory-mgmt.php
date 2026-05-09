@@ -6,7 +6,7 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 /**
  * Inventory & Stock Command Center - DesiVastra Admin
  */
-require_once __DIR__ . '/includes/layout.php';
+
 
 $db = getDB();
 $csrf = generateCSRF();
@@ -16,32 +16,42 @@ $csrf = generateCSRF();
 // ============================================
 try {
     // Warehouses Table
-    $db->exec("CREATE TABLE IF NOT EXISTS `warehouses` (
-        `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        `name` VARCHAR(100) NOT NULL,
-        `location` VARCHAR(255),
-        `contact_person` VARCHAR(100),
-        `phone` VARCHAR(20),
-        `status` TINYINT(1) DEFAULT 1,
-        `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    $db->exec("CREATE TABLE IF NOT EXISTS warehouses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR(100) NOT NULL,
+        location VARCHAR(255),
+        contact_person VARCHAR(100),
+        phone VARCHAR(20),
+        status INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
 
     // Product Warehouse Stock Table
-    $db->exec("CREATE TABLE IF NOT EXISTS `product_warehouse_stock` (
-        `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        `warehouse_id` INT UNSIGNED NOT NULL,
-        `product_id` INT UNSIGNED NOT NULL,
-        `stock` INT DEFAULT 0,
-        `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON DELETE CASCADE,
-        FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE,
-        UNIQUE KEY `unique_wh_product` (`warehouse_id`, `product_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    $db->exec("CREATE TABLE IF NOT EXISTS product_warehouse_stock (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        warehouse_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        stock INTEGER DEFAULT 0,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(warehouse_id, product_id)
+    )");
+
+    // Stock Logs Table
+    $db->exec("CREATE TABLE IF NOT EXISTS stock_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        old_stock INTEGER DEFAULT 0,
+        new_stock INTEGER DEFAULT 0,
+        change_qty INTEGER DEFAULT 0,
+        reason VARCHAR(255),
+        staff_name VARCHAR(100),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
 
     // Seed default warehouses if empty
     $whCount = $db->query("SELECT COUNT(*) FROM warehouses")->fetchColumn();
     if ($whCount == 0) {
-        $db->exec("INSERT INTO warehouses (name, location, status) VALUES 
+        $db->exec("INSERT INTO warehouses (name, location, status) VALUES
             ('Surat Main Warehouse', 'Surat, Gujarat', 1),
             ('Delhi Distribution Center', 'Delhi, NCR', 1)");
     }
@@ -79,11 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $stmt = $db->prepare("UPDATE products SET stock = ? WHERE id = ?");
                         $stmt->execute([$newGlobalStock, $productId]);
                         
-                        // Update Warehouse specific stock
-                        $stmt = $db->prepare("INSERT INTO product_warehouse_stock (warehouse_id, product_id, stock) 
-                                            VALUES (?, ?, ?) 
-                                            ON DUPLICATE KEY UPDATE stock = stock + ?");
-                        $stmt->execute([$warehouseId, $productId, $changeQty, $changeQty]);
+                        // Update Warehouse specific stock (SQLite UPSERT)
+                        $stmt = $db->prepare("INSERT INTO product_warehouse_stock (warehouse_id, product_id, stock)
+                                            VALUES (?, ?, ?)
+                                            ON CONFLICT(warehouse_id, product_id) DO UPDATE SET stock = stock + excluded.stock, updated_at = datetime('now')");
+                        $stmt->execute([$warehouseId, $productId, $changeQty]);
 
                         // Log Movement
                         $stmt = $db->prepare("INSERT INTO stock_logs (product_id, old_stock, new_stock, change_qty, reason, staff_name) 
@@ -149,9 +159,23 @@ $pagination = paginate($logsQuery, [], $page, $perPage);
 $logs = $pagination['data'];
 
 // 4. Warehouses
-$allWarehouses = $db->query("SELECT * FROM warehouses WHERE status = 1").fetchAll();
+$allWarehouses = $db->query("SELECT * FROM warehouses WHERE status = 1")->fetchAll();
 ?>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesiVastra Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
+</head>
+<body>
+<div class="admin-layout">
+    <?php require_once __DIR__ . '/includes/layout.php'; ?>
 <div class="page-content">
     
     <!-- Flash Messages -->

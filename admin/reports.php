@@ -41,7 +41,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         $whereDate = " AND DATE(o.created_at) <= ?";
         $dateParams = [$dateTo];
     } else {
-        $whereDate = " AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)";
+        $whereDate = " AND DATE(o.created_at) >= DATE('now', '-' || ? || ' days')";
         $dateParams = [$days];
     }
 
@@ -179,7 +179,7 @@ if ($dateFrom && $dateTo) {
     $revenueQuery .= " AND DATE(o.created_at) <= ?";
     $revParams = [$dateTo];
 } else {
-    $revenueQuery .= " AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)";
+    $revenueQuery .= " AND DATE(o.created_at) >= DATE('now', '-' || ? || ' days')";
     $revParams = [$days];
 }
 $stmt = $db->prepare($revenueQuery);
@@ -191,7 +191,7 @@ $prevRevenue = 0;
 $revChange = 0;
 try {
     $prevDays = $days * 2;
-    $prevRevenueQuery = "SELECT COALESCE(SUM(total), 0) as prev_revenue FROM orders o WHERE payment_status = 'paid' AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND o.created_at < DATE_SUB(CURDATE(), INTERVAL ? DAY)";
+    $prevRevenueQuery = "SELECT COALESCE(SUM(total), 0) as prev_revenue FROM orders o WHERE payment_status = 'paid' AND DATE(o.created_at) >= DATE('now', '-' || ? || ' days') AND DATE(o.created_at) < DATE('now', '-' || ? || ' days')";
     $stmt = $db->prepare($prevRevenueQuery);
     $stmt->execute([$prevDays, $days]);
     $prevRevenue = (float)$stmt->fetch()['prev_revenue'];
@@ -215,7 +215,7 @@ if ($dateFrom && $dateTo) {
     $ordersQuery .= " AND DATE(o.created_at) <= ?";
     $ordParams = [$dateTo];
 } else {
-    $ordersQuery .= " AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)";
+    $ordersQuery .= " AND DATE(o.created_at) >= DATE('now', '-' || ? || ' days')";
     $ordParams = [$days];
 }
 $stmt = $db->prepare($ordersQuery);
@@ -238,7 +238,7 @@ if ($dateFrom && $dateTo) {
     $refundsQuery .= " AND DATE(o.created_at) <= ?";
     $refParams = [$dateTo];
 } else {
-    $refundsQuery .= " AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)";
+    $refundsQuery .= " AND DATE(o.created_at) >= DATE('now', '-' || ? || ' days')";
     $refParams = [$days];
 }
 $stmt = $db->prepare($refundsQuery);
@@ -310,19 +310,19 @@ try {
 $customerTrend = [];
 try {
     $stmt = $db->query("
-        SELECT DATE_FORMAT(o.created_at, '%Y-%m') as month,
-               COUNT(DISTINCT CASE WHEN first_order.month = DATE_FORMAT(o.created_at, '%Y-%m') THEN o.customer_id END) as new_customers,
-               COUNT(DISTINCT CASE WHEN first_order.month < DATE_FORMAT(o.created_at, '%Y-%m') THEN o.customer_id END) as returning_customers
+        SELECT strftime('%Y-%m', o.created_at) as month,
+               COUNT(DISTINCT CASE WHEN first_order.month = strftime('%Y-%m', o.created_at) THEN o.customer_id END) as new_customers,
+               COUNT(DISTINCT CASE WHEN first_order.month < strftime('%Y-%m', o.created_at) THEN o.customer_id END) as returning_customers
         FROM orders o
         LEFT JOIN (
-            SELECT customer_id, DATE_FORMAT(MIN(created_at), '%Y-%m') as month
+            SELECT customer_id, strftime('%Y-%m', MIN(created_at)) as month
             FROM orders
             WHERE customer_id IS NOT NULL
             GROUP BY customer_id
         ) first_order ON first_order.customer_id = o.customer_id
         WHERE o.customer_id IS NOT NULL
-        AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-        GROUP BY DATE_FORMAT(o.created_at, '%Y-%m')
+        AND DATE(o.created_at) >= DATE('now', '-6 months')
+        GROUP BY strftime('%Y-%m', o.created_at)
         ORDER BY month ASC
     ");
     while ($row = $stmt->fetch()) {
@@ -394,7 +394,9 @@ try {
 $avgDeliveryTime = 'N/A';
 try {
     $stmt = $db->query("
-        SELECT AVG(DATEDIFF(delivered_at, created_at)) as avg_days
+        SELECT ROUND(AVG(
+            CAST(julianday(delivered_at) - julianday(created_at) AS REAL)
+        ), 1) as avg_days
         FROM orders
         WHERE status = 'delivered' AND delivered_at IS NOT NULL
     ");

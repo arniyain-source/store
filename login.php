@@ -16,7 +16,7 @@
     <div class="app-container" style="background: var(--bg-dark);">
 
         <div class="login-container">
-            <a href="index.html" class="close-btn" aria-label="Close"><i class="fa-solid fa-xmark"></i></a>
+            <a href="index.php" class="close-btn" aria-label="Close"><i class="fa-solid fa-xmark"></i></a>
             <div class="login-header-img bg-img" style="background-image: url('https://images.unsplash.com/photo-1617305988165-27f940898eb2?auto=format&fit=crop&w=800&q=80')">
             </div>
             <div class="login-form">
@@ -48,7 +48,7 @@
                             <input type="checkbox" id="remember-me">
                             <span>Remember Me</span>
                         </label>
-                        <a href="forgot.html" class="gold-link auth-forgot">Forgot Password?</a>
+                        <a href="forgot.php" class="gold-link auth-forgot">Forgot Password?</a>
                     </div>
 
                     <p class="terms">By continuing, I agree to the <a href="#" class="gold-link">Terms of Use</a> & <a href="#" class="gold-link">Privacy Policy</a></p>
@@ -62,7 +62,7 @@
 
                 <div class="auth-divider"><span>New to Arniya?</span></div>
 
-                <a href="register.html" class="outline-btn full-width auth-link-btn">Create New Account</a>
+                <a href="register.php" class="outline-btn full-width auth-link-btn">Create New Account</a>
 
                 <div class="trouble-login">
                     Experience issues? <a href="#" class="gold-link" onclick="window.openSupportPopup && openSupportPopup(); return false;">Contact Concierge</a>
@@ -144,7 +144,7 @@
             }
 
             showToast('Logged in successfully!');
-            setTimeout(() => { window.location.href = 'dashboard.html'; }, 700);
+            setTimeout(() => { window.location.href = 'dashboard.php'; }, 700);
         }
 
         function loginWithOtp() {
@@ -161,7 +161,7 @@
                 if (!localStorage.getItem('arniyaUserType')) localStorage.setItem('arniyaUserType', 'customer');
                 if (!localStorage.getItem('arniyaUserName')) localStorage.setItem('arniyaUserName', 'Arniya Member');
                 showToast('Logged in successfully!');
-                setTimeout(() => { window.location.href = 'dashboard.html'; }, 700);
+                setTimeout(() => { window.location.href = 'dashboard.php'; }, 700);
             }, 700);
         }
     </script>

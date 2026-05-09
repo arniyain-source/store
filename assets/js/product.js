@@ -13,7 +13,7 @@ function sanitize(str) {
 }
 
 // ── Bridge functions for static HTML onclick handlers ──
-// product.html references updateMainImg() and selectSize() in static HTML
+// product.php references updateMainImg() and selectSize() in static HTML
 // These bridge to the actual JS functions to prevent ReferenceError
 function updateMainImg(el, url) {
     updateMainImage(url);
@@ -86,19 +86,8 @@ function renderMobileGalleryStrip(images) {
     const strip = document.getElementById("mobile-gallery-strip");
     if (!strip) return;
 
-    // Fallback gallery images so the strip always looks full
-    const FALLBACK_IMGS = [
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-        "https://images.unsplash.com/photo-1526045612212-70caf35c14df",
-        "https://images.unsplash.com/photo-1524592094714-0f0654e20314",
-        "https://images.unsplash.com/photo-1611085583191-a3b181a88401"
-    ];
-
-    // Pad images array to at least 4 items
+    // Use only the actual product images
     const allImgs = [...images];
-    while (allImgs.length < 4) {
-        allImgs.push(FALLBACK_IMGS[allImgs.length % FALLBACK_IMGS.length]);
-    }
 
     const imgThumbs = allImgs.map((img, i) => `
         <button class="mg-thumb ${i === 0 ? 'mg-thumb-active' : ''}"
@@ -109,7 +98,7 @@ function renderMobileGalleryStrip(images) {
         </button>
     `).join("");
 
-    const videoThumb = `
+    const videoThumb = currentProduct.video ? `
         <button class="mg-thumb mg-thumb-video" onclick="openReel()" aria-label="Watch product video">
             <div class="mg-video-overlay">
                 <i class="fa-solid fa-play"></i>
@@ -117,7 +106,7 @@ function renderMobileGalleryStrip(images) {
             </div>
             <div class="mg-thumb-bg" style="background-image:url('${allImgs[0]}?w=120&q=80')"></div>
         </button>
-    `;
+    ` : '';
 
     strip.innerHTML = imgThumbs + videoThumb;
 }
@@ -201,7 +190,7 @@ function renderRelatedProducts(productId) {
 
     const relatedProducts = getRelatedProducts(productId, 4);
     relatedGrid.innerHTML = relatedProducts.map((product, index) => `
-        <a href="product.html?id=${product.id}" class="related-card">
+        <a href="product.php?id=${product.id}" class="related-card">
             <div class="r-card-img bg-img" style="background-image:url('${product.img}?w=500&q=80')">
                 <span class="r-badge">${index === 0 ? "Premium" : index === 1 ? "Hot" : index === 2 ? "New" : "Curated"}</span>
             </div>
@@ -337,15 +326,15 @@ function setRating(value) {
 }
 
 function getStoredReviews() {
-    const allReviews = safeParse("arniyaReviews", {});
+    const allReviews = safeParse("desivastraReviews", {});
     return allReviews[currentProduct.id] || [];
 }
 
 function saveStoredReview(review) {
-    const allReviews = safeParse("arniyaReviews", {});
+    const allReviews = safeParse("desivastraReviews", {});
     const existing = allReviews[currentProduct.id] || [];
     allReviews[currentProduct.id] = [review, ...existing].slice(0, 6);
-    localStorage.setItem("arniyaReviews", JSON.stringify(allReviews));
+    localStorage.setItem("desivastraReviews", JSON.stringify(allReviews));
 }
 
 function getReviewCards() {
@@ -539,7 +528,7 @@ function checkDelivery() {
 function populateProductPage(product) {
     const discount = calculateDiscount(product.price, product.oldPrice);
 
-    document.title = `${product.name} - ARNiya Smart Hub`;
+    document.title = `${product.name} - DesiVastra`;
     setText(".product-title-header", product.name);
     setText(".p-title", product.name);
     setText(".p-main-price", formatMoney(product.price));
@@ -570,7 +559,7 @@ function populateProductPage(product) {
 document.addEventListener("DOMContentLoaded", () => {
     currentProduct = getProductFromUrl();
     if (!currentProduct) {
-        document.title = "Product Not Found - ARNiya Smart Hub";
+        document.title = "Product Not Found - DesiVastra";
         const main = document.querySelector(".scroll-area");
         if (main) {
             main.innerHTML = `
@@ -578,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <i class="fa-solid fa-circle-exclamation" style="font-size:48px; color:var(--gold-primary); margin-bottom:20px;"></i>
                     <h2 style="margin-bottom:12px;">Product Not Found</h2>
                     <p style="color:var(--text-secondary); margin-bottom:24px;">The product you are looking for does not exist or has been removed.</p>
-                    <a href="shop.html" class="gold-btn" style="display:inline-flex;">Browse Collection</a>
+                    <a href="shop.php" class="gold-btn" style="display:inline-flex;">Browse Collection</a>
                 </div>
             `;
         }

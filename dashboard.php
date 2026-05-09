@@ -1,154 +1,326 @@
-<?php
-/**
- * Customer Dashboard - DesiVastra
- */
-require_once __DIR__ . '/includes/functions.php';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Manage your orders, addresses and profile on DesiVastra.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard - ARNiya Smart Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <div class="app-container">
 
-// Check if user is logged in
-if (!isset($_SESSION['customer_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-$db = getDB();
-$customerId = $_SESSION['customer_id'];
-
-// Fetch customer data
-$stmt = $db->prepare("SELECT * FROM customers WHERE id = ?");
-$stmt->execute([$customerId]);
-$customer = $stmt->fetch();
-
-if (!$customer) {
-    session_destroy();
-    header('Location: login.php');
-    exit;
-}
-
-// Fetch Stats
-$stmt = $db->prepare("SELECT COUNT(*) as total FROM orders WHERE customer_id = ?");
-$stmt->execute([$customerId]);
-$totalOrders = $stmt->fetch()['total'];
-
-$stmt = $db->prepare("SELECT COUNT(*) as processing FROM orders WHERE customer_id = ? AND status IN ('pending', 'confirmed', 'processing', 'shipped')");
-$stmt->execute([$customerId]);
-$processingOrders = $stmt->fetch()['processing'];
-
-$stmt = $db->prepare("SELECT COUNT(*) as wishlist_count FROM wishlist WHERE customer_id = ?");
-$stmt->execute([$customerId]);
-$wishlistCount = $stmt->fetch()['wishlist_count'];
-
-// Fetch Recent Orders
-$stmt = $db->prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC LIMIT 5");
-$stmt->execute([$customerId]);
-$recentOrders = $stmt->fetchAll();
-
-$pageTitle = "My Dashboard - DesiVastra";
-$extraCSS = '<link rel="stylesheet" href="assets/css/dashboard.css">';
-
-include 'templates/head.php';
-?>
-<div class="app-container">
-    <?php include 'templates/header.php'; ?>
-
-    <main class="scroll-area">
-        <div class="dash-wrap" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-            
-            <!-- Overview Header -->
-            <div class="dash-panel-head" style="margin-bottom: 30px;">
-                <div>
-                    <h1 style="font-size: 24px; font-weight: 700; color: #fff;">Welcome back, <?php echo clean($customer['name']); ?>!</h1>
-                    <span class="badge" style="background: var(--gold-gradient); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; display: inline-block; margin-top: 8px;">
-                        <?php echo ucfirst($customer['user_type']); ?>
-                    </span>
+        <!-- Global Header (matches sitewide design) -->
+        <header class="global-header">
+            <div class="desktop-top-bar">
+                <div class="dtb-inner">
+                    <div class="dtb-left">
+                        <i class="fa-solid fa-shield-halved"></i> Secure Account &nbsp;|&nbsp;
+                        <i class="fa-solid fa-truck-fast"></i> Premium concierge support
+                    </div>
+                    <div class="dtb-right">
+                        <a href="index.php">Home</a>
+                        <span>|</span>
+                        <a href="#" onclick="openSupportPopup(); return false;"><i class="fa-solid fa-headset"></i> Live Support 24/7</a>
+                        <span>|</span>
+                        <a href="#" onclick="logout(); return false;">Sign Out</a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="dash-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div class="dash-stat" style="background: var(--bg-card-solid); border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px; text-align: center;">
-                    <div class="dash-stat-label" style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">Total Orders</div>
-                    <div class="dash-stat-value" style="font-size: 24px; font-weight: 800; color: var(--gold-light);"><?php echo $totalOrders; ?></div>
+            <div class="header-inner">
+                <div class="header-left">
+                    <button class="hdr-icon-btn mobile-only" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+                    <button class="d-menu-btn desktop-only" onclick="toggleMenu()">
+                        <i class="fa-solid fa-bars"></i><span>All</span>
+                    </button>
                 </div>
-                <div class="dash-stat" style="background: var(--bg-card-solid); border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px; text-align: center;">
-                    <div class="dash-stat-label" style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">Processing</div>
-                    <div class="dash-stat-value" style="font-size: 24px; font-weight: 800; color: var(--gold-light);"><?php echo $processingOrders; ?></div>
+                <div class="header-center">
+                    <a href="index.php" class="logo">Arniya<span class="gold">Hub</span></a>
+                    <span class="logo-badge mobile-only">DASHBOARD</span>
                 </div>
-                <div class="dash-stat" style="background: var(--bg-card-solid); border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px; text-align: center;">
-                    <div class="dash-stat-label" style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">In Wishlist</div>
-                    <div class="dash-stat-value" style="font-size: 24px; font-weight: 800; color: var(--gold-light);"><?php echo $wishlistCount; ?></div>
+                <div class="desktop-search">
+                    <select class="search-cat-select"><option>All</option><option>Watches</option><option>Jewelry</option><option>Accessories</option></select>
+                    <input type="text" placeholder="Search ARNiya Smart Hub..." onkeydown="if(event.key==='Enter'){window.location.href='shop.php'}">
+                    <button onclick="window.location.href='shop.php'"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <button class="support-24-btn mobile-only" onclick="openSupportPopup()">
+                    <span class="support-pulse"></span>
+                    <i class="fa-solid fa-headset"></i><span>24/7</span>
+                </button>
+                <div class="desktop-nav-items">
+                    <div class="d-nav-item d-location">
+                        <span class="small"><i class="fa-solid fa-location-dot" style="color:var(--gold-light)"></i> Deliver to</span>
+                        <span class="bold">India 🇮🇳</span>
+                    </div>
+                    <div class="d-nav-item">
+                        <span class="small">Hello, <span id="hdr-username">Member</span></span>
+                        <span class="bold">Account &amp; Lists</span>
+                    </div>
+                    <div class="d-nav-item d-icon-item" onclick="openRightDrawer('wishlist')">
+                        <div class="d-icon-wrapper"><i class="fa-regular fa-heart"></i></div>
+                        <span class="bold">Wishlist</span>
+                    </div>
+                    <div class="d-nav-item cart-btn" onclick="openRightDrawer('cart')">
+                        <span class="cart-badge">0</span>
+                        <i class="fa-solid fa-cart-shopping fa-2x"></i>
+                        <span class="bold" style="margin-bottom:2px;">Cart</span>
+                    </div>
                 </div>
             </div>
+            <div class="header-gold-line mobile-only"></div>
+            <div class="desktop-secondary-nav">
+                <a href="shop.php" class="sec-nav-deals"><i class="fa-solid fa-bolt"></i> Today's Deals</a>
+                <a href="shop.php">New Arrivals</a>
+                <a href="shop.php">Best Sellers</a>
+                <a href="shop.php">Watches</a>
+                <a href="shop.php">Jewelry</a>
+                <a href="shop.php">Accessories</a>
+                <a href="shop.php">Gift Cards</a>
+                <a href="dashboard.php" class="sec-nav-prime">✦ My Dashboard</a>
+            </div>
+        </header>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;" class="dash-grid-layout">
-                
-                <!-- Recent Orders Table -->
-                <div class="card" style="background: var(--bg-card-solid); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden;">
-                    <div class="card-header" style="padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="font-size: 16px; font-weight: 700; color: #fff;"><i class="fa-solid fa-box-open" style="color: var(--gold-primary); margin-right: 10px;"></i>Recent Orders</h3>
-                        <a href="#" style="color: var(--gold-light); font-size: 12px; font-weight: 600;">View All</a>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                            <thead>
-                                <tr style="background: rgba(255,255,255,0.03); color: var(--text-secondary); text-align: left;">
-                                    <th style="padding: 15px;">Order ID</th>
-                                    <th style="padding: 15px;">Date</th>
-                                    <th style="padding: 15px;">Total</th>
-                                    <th style="padding: 15px;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody style="color: #fff;">
-                                <?php if(empty($recentOrders)): ?>
-                                    <tr>
-                                        <td colspan="4" style="padding: 40px; text-align: center; color: var(--text-secondary);">No orders found yet.</td>
-                                    </tr>
-                                <?php else: ?>
-                                    <?php foreach($recentOrders as $order): ?>
-                                    <tr style="border-bottom: 1px solid var(--glass-border);">
-                                        <td style="padding: 15px; font-weight: 700; color: var(--gold-primary);">#<?php echo $order['order_number']; ?></td>
-                                        <td style="padding: 15px;"><?php echo date('d M Y', strtotime($order['created_at'])); ?></td>
-                                        <td style="padding: 15px; font-weight: 600;">₹<?php echo number_format($order['total'], 2); ?></td>
-                                        <td style="padding: 15px;">
-                                            <span class="badge <?php echo getStatusBadge($order['status']); ?>" style="padding: 4px 10px; border-radius: 4px; font-size: 11px;">
-                                                <?php echo ucfirst($order['status']); ?>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+        <!-- Support popup (reused) -->
+        <div id="support-overlay" class="support-overlay" onclick="closeSupportPopup()"></div>
+        <div id="support-popup" class="support-popup">
+            <div class="support-popup-header">
+                <div class="support-popup-icon"><i class="fa-solid fa-headset"></i></div>
+                <div><h3>Support Center</h3><p>We're online &amp; ready to help</p></div>
+                <button class="close-btn-styled" onclick="closeSupportPopup()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="support-popup-status"><span class="status-dot"></span> Available 24/7 · Avg. response &lt; 2 min</div>
+            <div class="support-popup-actions">
+                <a href="https://wa.me/919876543210" class="support-action-btn whatsapp-btn">
+                    <div class="s-btn-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                    <div class="s-btn-text"><span class="s-btn-title">Chat on WhatsApp</span><span class="s-btn-sub">Instant reply guaranteed</span></div>
+                    <i class="fa-solid fa-chevron-right s-arrow"></i>
+                </a>
+                <a href="tel:+919876543210" class="support-action-btn call-btn">
+                    <div class="s-btn-icon"><i class="fa-solid fa-phone"></i></div>
+                    <div class="s-btn-text"><span class="s-btn-title">Call Us Now</span><span class="s-btn-sub">+91 98765 43210</span></div>
+                    <i class="fa-solid fa-chevron-right s-arrow"></i>
+                </a>
+            </div>
+            <div class="support-popup-footer"><i class="fa-solid fa-shield-halved"></i> Your privacy is protected</div>
+        </div>
+
+        <!-- Drawers (reused for menu / cart / wishlist / account) -->
+        <div class="overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+        <div id="menu-drawer" class="drawer-left">
+            <div class="drawer-header">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <i class="fa-solid fa-circle-user fa-2x" style="color:var(--gold-light)"></i>
+                    <h2 id="guest-greeting">Arniya Member</h2>
                 </div>
-
-                <!-- Quick Links -->
-                <div class="quick-links">
-                    <h3 style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 20px;">Quick Actions</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <a href="track-order.php" class="gold-btn" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i class="fa-solid fa-truck-fast"></i> Track Order
-                        </a>
-                        <a href="#" class="outline-btn" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i class="fa-solid fa-location-dot"></i> Edit Address
-                        </a>
-                        <a href="#" class="outline-btn" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i class="fa-solid fa-headset"></i> Contact Support
-                        </a>
-                    </div>
-                </div>
-
+                <button class="close-btn-styled" onclick="toggleMenu()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body">
+                <ul class="menu-list">
+                    <li class="menu-title">Browse</li>
+                    <li class="menu-link" onclick="window.location.href='index.php'"><div class="m-left"><i class="fa-solid fa-house"></i> Home</div><i class="fa-solid fa-chevron-right"></i></li>
+                    <li class="menu-link" onclick="window.location.href='shop.php'"><div class="m-left"><i class="fa-solid fa-bag-shopping"></i> Shop</div><i class="fa-solid fa-chevron-right"></i></li>
+                    <li class="menu-title">Account</li>
+                    <li class="menu-link" onclick="window.location.href='dashboard.php'"><div class="m-left"><i class="fa-regular fa-user"></i> My Dashboard</div><i class="fa-solid fa-chevron-right"></i></li>
+                    <li class="menu-link" onclick="openRightDrawer('wishlist')"><div class="m-left"><i class="fa-regular fa-heart"></i> Wishlist</div><i class="fa-solid fa-chevron-right"></i></li>
+                    <li class="menu-link" onclick="openRightDrawer('cart')"><div class="m-left"><i class="fa-solid fa-bag-shopping"></i> Cart</div><i class="fa-solid fa-chevron-right"></i></li>
+                    <li class="menu-link" onclick="logout()"><div class="m-left"><i class="fa-solid fa-right-from-bracket"></i> Logout</div><i class="fa-solid fa-chevron-right"></i></li>
+                </ul>
             </div>
         </div>
-        <div class="pb-100"></div>
-    </main>
 
-    <?php include 'templates/footer.php'; ?>
-</div>
+        <div class="overlay" id="right-overlay" onclick="closeRightDrawer()"></div>
+        <aside id="right-drawer" class="drawer-right">
+            <div class="drawer-header-right">
+                <h2 id="drawer-title">Cart</h2>
+                <button class="close-btn-styled" onclick="closeRightDrawer()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body" id="drawer-content"></div>
+        </aside>
 
-<style>
-    @media (max-width: 768px) {
-        .dash-grid-layout {
-            grid-template-columns: 1fr !important;
-        }
-    }
-</style>
+        <main class="scroll-area">
+            <div class="dash-wrap">
+
+                <!-- Mobile sidebar toggle bar -->
+                <div class="dash-mobile-bar">
+                    <div class="current">
+                        <i class="fa-solid fa-table-columns" style="color:var(--gold-primary); margin-right:8px;"></i>
+                        <span id="mobile-current-section">Profile</span>
+                    </div>
+                    <button onclick="toggleDashSidebar()"><i class="fa-solid fa-bars"></i> Menu</button>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="dash-sidebar" id="dashSidebar">
+                    <div class="dash-userbox">
+                        <div class="dash-avatar" id="dash-avatar-letter">A</div>
+                        <div class="dash-user-meta">
+                            <div class="dash-user-name truncate" id="dash-username">Arniya Member</div>
+                            <div class="dash-user-role" id="dash-userrole">Customer</div>
+                        </div>
+                    </div>
+
+                    <div class="dash-tabs" id="dash-tabs">
+                        <!-- tabs injected by JS based on user type -->
+                    </div>
+                </aside>
+
+                <!-- Main panel -->
+                <section class="dash-main">
+
+                    <!-- PROFILE -->
+                    <div class="dash-panel active" data-panel="profile">
+                        <div class="dash-panel-head">
+                            <h2><i class="fa-regular fa-id-card"></i>Profile Details</h2>
+                            <button class="order-btn primary" onclick="showToast('Edit profile is a frontend mock')"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+                        </div>
+                        <div class="dash-profile-grid">
+                            <div class="dash-info-row"><label>Full Name</label><strong id="p-name">Arniya Member</strong></div>
+                            <div class="dash-info-row"><label>User Type</label><strong id="p-type">Customer</strong></div>
+                            <div class="dash-info-row"><label>Mobile</label><strong id="p-mobile">+91 98765 43210</strong></div>
+                            <div class="dash-info-row"><label>Email</label><strong id="p-email">member@arniyahub.com</strong></div>
+                            <div class="dash-info-row"><label>City</label><strong id="p-city">Mumbai</strong></div>
+                            <div class="dash-info-row"><label>State</label><strong id="p-state">Maharashtra</strong></div>
+                            <div class="dash-info-row" id="p-business-row"><label>Business Name</label><strong id="p-business">—</strong></div>
+                            <div class="dash-info-row"><label>Member Since</label><strong>Apr 2025</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- MY ORDERS -->
+                    <div class="dash-panel" data-panel="orders">
+                        <div class="dash-panel-head">
+                            <h2><i class="fa-solid fa-box-open"></i>My Orders</h2>
+                            <button class="order-btn" onclick="window.location.href='shop.php'"><i class="fa-solid fa-cart-plus"></i> Continue Shopping</button>
+                        </div>
+                        <div class="dash-stats" id="orders-stats"></div>
+                        <div id="orders-list"></div>
+                    </div>
+
+                    <!-- ORDER DETAILS (drill-in) -->
+                    <div class="dash-panel" data-panel="order-detail">
+                        <button class="order-detail-back" onclick="showPanel('orders')"><i class="fa-solid fa-arrow-left"></i> Back to My Orders</button>
+                        <div id="order-detail-body"></div>
+                    </div>
+
+                    <!-- BULK ORDER INQUIRY (Wholesale) -->
+                    <div class="dash-panel" data-panel="bulk">
+                        <div class="dash-panel-head"><h2><i class="fa-solid fa-boxes-stacked"></i>Bulk Order Inquiry</h2></div>
+                        <form class="dash-form-grid" onsubmit="event.preventDefault(); showToast('Bulk inquiry submitted (mock)')">
+                            <div><label>Product / SKU</label><div class="input-group"><input type="text" placeholder="e.g. AH-W-01" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none;"></div></div>
+                            <div><label>Quantity</label><div class="input-group"><input type="number" min="1" placeholder="e.g. 50" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none;"></div></div>
+                            <div><label>Set Quantity</label><div class="input-group"><input type="number" min="1" placeholder="e.g. 10" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none;"></div></div>
+                            <div><label>Required By</label><div class="input-group"><input type="date" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none;"></div></div>
+                            <div style="grid-column:1/-1;"><label>Notes</label><div class="input-group"><textarea placeholder="Any special requirements" rows="3" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none; resize:vertical;"></textarea></div></div>
+                            <div style="grid-column:1/-1;"><button type="submit" class="gold-btn full-width">Submit Inquiry</button></div>
+                        </form>
+                    </div>
+
+                    <!-- BOOKING HISTORY (Retailer) -->
+                    <div class="dash-panel" data-panel="booking">
+                        <div class="dash-panel-head"><h2><i class="fa-solid fa-clock-rotate-left"></i>Product Booking History</h2></div>
+                        <div id="booking-list"></div>
+                    </div>
+
+                    <!-- CUSTOMER ORDERS (Reseller) -->
+                    <div class="dash-panel" data-panel="customer-orders">
+                        <div class="dash-panel-head"><h2><i class="fa-solid fa-users"></i>Customer Order Details</h2></div>
+                        <div id="reseller-customer-list"></div>
+                    </div>
+
+                    <!-- MARGIN DETAILS (Reseller) -->
+                    <div class="dash-panel" data-panel="margin">
+                        <div class="dash-panel-head"><h2><i class="fa-solid fa-percent"></i>Margin Details</h2></div>
+                        <div id="margin-list"></div>
+                    </div>
+
+                    <!-- RESELLER PROFIT -->
+                    <div class="dash-panel" data-panel="profit">
+                        <div class="dash-panel-head"><h2><i class="fa-solid fa-chart-line"></i>Reseller Profit</h2></div>
+                        <div class="dash-stats">
+                            <div class="dash-stat"><div class="dash-stat-label">This Month</div><div class="dash-stat-value">₹12,450</div></div>
+                            <div class="dash-stat"><div class="dash-stat-label">Last 3 Months</div><div class="dash-stat-value">₹38,920</div></div>
+                            <div class="dash-stat"><div class="dash-stat-label">Total Orders</div><div class="dash-stat-value">42</div></div>
+                            <div class="dash-stat"><div class="dash-stat-label">Avg Margin</div><div class="dash-stat-value">18%</div></div>
+                        </div>
+                        <div id="profit-list"></div>
+                    </div>
+
+                    <!-- WISHLIST -->
+                    <div class="dash-panel" data-panel="wishlist">
+                        <div class="dash-panel-head">
+                            <h2><i class="fa-regular fa-heart"></i>My Wishlist</h2>
+                            <button class="order-btn" onclick="openRightDrawer('wishlist')"><i class="fa-solid fa-eye"></i> Open Drawer</button>
+                        </div>
+                        <div id="wishlist-list"></div>
+                    </div>
+
+                    <!-- ADDRESS BOOK -->
+                    <div class="dash-panel" data-panel="address">
+                        <div class="dash-panel-head">
+                            <h2><i class="fa-solid fa-location-dot"></i>Address Book</h2>
+                            <button class="order-btn primary" onclick="showToast('Add address (mock)')"><i class="fa-solid fa-plus"></i> Add Address</button>
+                        </div>
+                        <div id="address-list"></div>
+                    </div>
+
+                    <!-- PAYMENT DETAILS -->
+                    <div class="dash-panel" data-panel="payment">
+                        <div class="dash-panel-head">
+                            <h2><i class="fa-regular fa-credit-card"></i>Payment Details</h2>
+                            <button class="order-btn primary" onclick="showToast('Add payment method (mock)')"><i class="fa-solid fa-plus"></i> Add Method</button>
+                        </div>
+                        <div id="payment-list"></div>
+                    </div>
+
+                    <!-- SUPPORT -->
+                    <div class="dash-panel" data-panel="support">
+                        <div class="dash-panel-head"><h2><i class="fa-solid fa-headset"></i>Support</h2></div>
+                        <div class="dash-profile-grid">
+                            <div class="dash-info-row" style="cursor:pointer;" onclick="window.open('https://wa.me/919876543210', '_blank')">
+                                <label>WhatsApp</label><strong>+91 98765 43210 →</strong>
+                            </div>
+                            <div class="dash-info-row" style="cursor:pointer;" onclick="window.location.href='tel:+919876543210'">
+                                <label>Call Us</label><strong>+91 98765 43210 →</strong>
+                            </div>
+                            <div class="dash-info-row" style="cursor:pointer;" onclick="window.location.href='mailto:support@arniyahub.com'">
+                                <label>Email Support</label><strong>support@arniyahub.com →</strong>
+                            </div>
+                            <div class="dash-info-row" style="cursor:pointer;" onclick="openSupportPopup()">
+                                <label>Live Support</label><strong>Available 24/7 →</strong>
+                            </div>
+                        </div>
+                        <form class="dash-form-grid" style="margin-top:22px;" onsubmit="event.preventDefault(); showToast('Support ticket sent (mock)'); this.reset();">
+                            <div style="grid-column:1/-1;"><label>Subject</label><div class="input-group"><input type="text" required placeholder="Brief subject" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none;"></div></div>
+                            <div style="grid-column:1/-1;"><label>Message</label><div class="input-group"><textarea required placeholder="How can we help?" rows="4" style="background:transparent; border:none; color:#fff; padding:14px 16px; font-family:inherit; font-size:14px; width:100%; outline:none; resize:vertical;"></textarea></div></div>
+                            <div style="grid-column:1/-1;"><button type="submit" class="gold-btn full-width">Send Message</button></div>
+                        </form>
+                    </div>
+
+                </section>
+            </div>
+
+            <div class="pb-100"></div>
+        </main>
+
+        <!-- Mobile bottom nav -->
+        <nav class="bottom-nav">
+            <a href="index.php" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+            <div class="nav-item" onclick="openRightDrawer('wishlist')"><i class="fa-regular fa-heart"></i><span>Wishlist</span></div>
+            <a href="shop.php" class="nav-item center-hex"><div class="hex-bg"><i class="fa-solid fa-gem"></i></div></a>
+            <div class="nav-item" onclick="openRightDrawer('cart')">
+                <div class="icon-badge-wrapper"><i class="fa-solid fa-bag-shopping"></i><span class="cart-badge">0</span></div>
+                <span>Cart</span>
+            </div>
+            <a href="dashboard.php" class="nav-item active"><i class="fa-solid fa-circle-user"></i><span>Account</span></a>
+        </nav>
+    </div>
+
+    <script src="assets/js/mockData.js"></script>
+    <script src="assets/js/global.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

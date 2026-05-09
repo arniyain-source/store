@@ -31,3 +31,7 @@ error_log
 .idea/
 *.swp
 *.swo
+
+# Local Databases
+*.sqlite
+*.sqlite3
