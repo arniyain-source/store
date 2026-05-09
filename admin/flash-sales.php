@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/core/app.php';
 if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 
 $db    = getDB();
@@ -35,7 +35,7 @@ $csrf = generateCSRF();
 </head>
 <body>
 <div class="admin-layout">
-    <?php require_once __DIR__ . '/includes/layout.php'; ?>
+    <?php require_once __DIR__ . '/../includes/layout.php'; ?>
     <div class="page-content">
         <div class="page-header">
             <div>

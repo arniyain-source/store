@@ -7,7 +7,7 @@ if (($_GET["key"] ?? "") !== $secret) {
     die("<h2>Access Denied</h2>");
 }
 
-require_once __DIR__ . "/includes/functions.php";
+require_once __DIR__ . "/includes/core/app.php";
 
 $newPass  = "DesiVastra@2024";
 $newHash  = password_hash($newPass, PASSWORD_BCRYPT);

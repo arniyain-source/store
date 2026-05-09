@@ -2,7 +2,7 @@
 /**
  * Admin Login Page
  */
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/core/app.php';
 
 // If already logged in, redirect to dashboard
 if (isAdminLoggedIn()) {

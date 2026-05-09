@@ -1,6 +1,6 @@
 <?php
 // ── Auth guard: MUST run before any HTML output ──
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/core/app.php';
 if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 
 /**
@@ -96,7 +96,7 @@ $csrf = generateCSRF();
 </head>
 <body>
 <div class="admin-layout">
-    <?php require_once __DIR__ . '/includes/layout.php'; ?>
+    <?php require_once __DIR__ . '/../includes/layout.php'; ?>
 <div class="page-content">
     <!-- Page Header -->
     <div class="page-header">
@@ -354,7 +354,6 @@ function openUploadModal() {
     alert('Bulk Upload Media tool... (Feature being implemented in Step 28)');
 }
 </script>
-</div>
 </div>
 </body>
 </html>

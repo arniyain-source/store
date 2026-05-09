@@ -1,9 +1,8 @@
 <?php
 // ── Auth guard: MUST run before any HTML output ──
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/core/app.php';
 if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
-?>
-<?php
+
 /**
  * Settings Page - DesiVastra E-Commerce Admin
  * Manages all site configuration: General, Shipping, Payment, Email, Social, Database Setup
@@ -11,7 +10,6 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 
 // Handle POST before any output — only load functions, NOT layout (which outputs HTML)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../includes/functions.php'; // includes database.php
     requireAdminLogin();
 
     if (!verifyCSRF($_POST['csrf_token'] ?? '')) {
@@ -176,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Normal page load
-require_once __DIR__ . '/includes/layout.php';
+require_once __DIR__ . '/../includes/layout.php';
 
 // Fetch all settings at once
 $settings = [];
@@ -241,10 +239,6 @@ if ($driver === 'sqlite') {
 </head>
 <body>
 <div class="admin-layout">
-
-<!-- sidebar + header injected by layout.php above -->
-
-
 
 <div class="page-content">
 
@@ -774,8 +768,6 @@ if ($driver === 'sqlite') {
     </div><!-- /.settings-layout -->
 
 </div><!-- /.page-content -->
-</main><!-- /.main-content -->
-
 </div><!-- /.admin-layout -->
 
 <!-- ============================================ -->

@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once 'includes/functions.php';
+require_once __DIR__ . '/includes/core/app.php';
 $db = getDB();
 
 // Categories from DB
@@ -152,7 +151,7 @@ if (empty($arrivals)) $arrivals = $db->query("SELECT p.*,c.name as category_name
                     </div>
                     <!-- Cart -->
                     <div class="d-nav-item cart-btn" onclick="openRightDrawer('cart')">
-                        <span class="cart-badge" id="&">0</span>
+                        <span class="cart-badge" id="cart-badge-desktop">0</span>
                         <i class="fa-solid fa-cart-shopping fa-2x"></i>
                         <span class="bold" style="margin-bottom:2px;">Cart</span>
                     </div>
@@ -770,7 +769,7 @@ if (empty($arrivals)) $arrivals = $db->query("SELECT p.*,c.name as category_name
             </a>
             <div class="nav-item" onclick="openRightDrawer('cart')">
                 <div class="icon-badge-wrapper">
-                    <i class="fa-solid fa-bag-shopping"></i><span class="cart-badge" id="&">0</span>
+                    <i class="fa-solid fa-bag-shopping"></i><span class="cart-badge" id="cart-badge-mobile">0</span>
                 </div>
                 <span>Cart</span>
             </div>

@@ -3,7 +3,7 @@
  * DesiVastra Admin Login — /admin-login
  * Clean standalone login page with redirect to admin/dashboard
  */
-require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/core/app.php';
 
 if (isAdminLoggedIn()) {
     header('Location: /admin/index.php');

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/core/app.php';
 if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 ?>
 <!DOCTYPE html>
@@ -15,7 +15,7 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
 </head>
 <body>
 <div class="admin-layout">
-<?php require_once __DIR__ . '/includes/layout.php'; ?>
+<?php require_once __DIR__ . '/../includes/layout.php'; ?>
 <div class="page-content">
 
     <div class="page-header">
@@ -43,7 +43,6 @@ if (!isAdminLoggedIn()) { header('Location: /admin-login'); exit; }
     </div>
 
 </div>
-</main>
 </div>
 </body>
 </html>

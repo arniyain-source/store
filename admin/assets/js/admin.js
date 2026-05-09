@@ -272,4 +272,34 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => msg.remove(), 300);
         }, 5000);
     });
+
+    // Dashboard sales chart
+    const salesChartCanvas = document.getElementById('salesChart');
+    if (salesChartCanvas) {
+        const salesData = JSON.parse(salesChartCanvas.dataset.sales);
+        const salesChart = new Chart(salesChartCanvas, {
+            type: 'line',
+            data: {
+                labels: salesData.labels,
+                datasets: [{
+                    label: 'Sales',
+                    data: salesData.revenue,
+                    borderColor: '#d4a853',
+                    backgroundColor: 'rgba(212, 168, 83, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
 });

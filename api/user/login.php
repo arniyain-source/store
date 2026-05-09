@@ -1,6 +1,6 @@
 <?php
 /**
- * API: User Login / Logout / Register / Profile
+ * API: User Login / Logout / Register / Profile / Password Reset
  */
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/functions.php';
@@ -80,12 +80,58 @@ try {
             jsonResponse(['success' => true, 'logged_in' => true, 'user' => $user, 'addresses' => $addresses]);
             break;
 
+        case 'forgot_password':
+            $email = sanitize($data['email'] ?? '');
+            if (!$email) {
+                jsonResponse(['success' => false, 'message' => 'Email is required'], 400);
+            }
+            $stmt = $db->prepare("SELECT id FROM customers WHERE email = ?");
+            $stmt->execute([$email]);
+            if (!$stmt->fetch()) {
+                jsonResponse(['success' => false, 'message' => 'No account found with that email'], 404);
+            }
+            $token = bin2hex(random_bytes(32));
+            $otp = rand(100000, 999999);
+            $expires = new DateTime('+15 minutes');
+            $stmt = $db->prepare("INSERT INTO password_resets (email, token, otp, expires_at) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$email, $token, $otp, $expires->format('Y-m-d H:i:s')]);
+            // In a real app, you would email this OTP to the user.
+            // For this example, we will return it in the response for simplicity.
+            jsonResponse(['success' => true, 'message' => 'An OTP has been sent to your email.', 'otp' => $otp, 'token' => $token]);
+            break;
+
+        case 'reset_password':
+            $token = sanitize($data['token'] ?? '');
+            $otp = sanitize($data['otp'] ?? '');
+            $password = $data['password'] ?? '';
+
+            if (!$token || !$otp || !$password) {
+                jsonResponse(['success' => false, 'message' => 'Token, OTP, and new password are required'], 400);
+            }
+
+            $stmt = $db->prepare("SELECT * FROM password_resets WHERE token = ? AND otp = ? AND expires_at > NOW()");
+            $stmt->execute([$token, $otp]);
+            $reset_request = $stmt->fetch();
+
+            if (!$reset_request) {
+                jsonResponse(['success' => false, 'message' => 'Invalid or expired token or OTP'], 400);
+            }
+
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $db->prepare("UPDATE customers SET password = ? WHERE email = ?");
+            $stmt->execute([$hash, $reset_request['email']]);
+
+            // Delete the reset token so it can't be used again
+            $db->prepare("DELETE FROM password_resets WHERE id = ?")->execute([$reset_request['id']]);
+
+            jsonResponse(['success' => true, 'message' => 'Your password has been reset successfully.']);
+            break;
+
         case 'check_pincode':
             $pincode = sanitize($data['pincode'] ?? $_GET['pincode'] ?? '');
             if (!preg_match('/^\d{6}$/', $pincode)) {
                 jsonResponse(['success' => false, 'message' => 'Invalid pincode format'], 400);
             }
-            // Simple India pincode delivery simulation
             $firstDigit = (int)$pincode[0];
             if ($firstDigit >= 1 && $firstDigit <= 8) {
                 $days = rand(3, 7);

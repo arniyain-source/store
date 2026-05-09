@@ -291,6 +291,17 @@ CREATE TABLE IF NOT EXISTS `activity_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- PASSWORD RESETS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS `password_resets` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `email` VARCHAR(150) NOT NULL,
+    `token` VARCHAR(255) NOT NULL,
+    `otp` VARCHAR(10) NOT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- INDEXES
 -- ============================================
 CREATE INDEX idx_products_category ON products(category_id);
@@ -305,5 +316,7 @@ CREATE INDEX idx_reviews_product ON reviews(product_id);
 CREATE INDEX idx_reviews_approved ON reviews(is_approved);
 CREATE INDEX idx_activity_admin ON activity_log(admin_id);
 CREATE INDEX idx_activity_date ON activity_log(created_at);
+CREATE INDEX idx_password_resets_email ON password_resets(email);
+CREATE INDEX idx_password_resets_token ON password_resets(token);
 
 SET FOREIGN_KEY_CHECKS = 1;

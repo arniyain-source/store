@@ -1,482 +1,129 @@
 <?php
-/**
- * Common Functions - DesiVastra E-Commerce
- */
-
-if (session_status() === PHP_SESSION_NONE) {
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../config/database.php';
+// --- Dashboard & API ---
 
-// ============================================
-// CONFIGURATION & CONSTANTS
-// ============================================
-define('CSRF_TOKEN_LIFETIME', 3600);
-define('UPLOAD_MAX_SIZE', 5 * 1024 * 1024);
-define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
-define('UPLOAD_PATH', __DIR__ . '/../uploads/');
-define('ADMIN_PER_PAGE', 10);
-define('CURRENCY_SYMBOL', '₹');
+function getDashboardStats() {
+    global $db;
+    $revenue = $db->query("SELECT SUM(total_price) FROM orders WHERE status = 'completed'")->fetchColumn();
+    $orders = $db->query("SELECT COUNT(*) FROM orders")->fetchColumn();
+    $customers = $db->query("SELECT COUNT(*) FROM users WHERE role = 'customer'")->fetchColumn();
+    $lowStock = $db->query("SELECT COUNT(*) FROM products WHERE stock < 5")->fetchColumn();
 
-/**
- * Build URL query parameters
- */
-function buildQueryParams(array $newParams): string {
-    $params = array_merge($_GET, $newParams);
-    $query = http_build_query($params);
-    return $query ? '?' . $query : '';
+    return [
+        'total_revenue' => $revenue ?? 0,
+        'total_orders' => $orders ?? 0,
+        'total_customers' => $customers ?? 0,
+        'low_stock' => $lowStock ?? 0,
+    ];
 }
 
-// ============================================
-// DATABASE CONNECTION
-// ============================================
+function getSalesChartData($days = 30) {
+    global $db;
+    $sales = [];
+    $query = "SELECT DATE(created_at) as date, SUM(total_price) as daily_sales 
+              FROM orders 
+              WHERE created_at >= DATE('now', '-{$days} days') AND status = 'completed'
+              GROUP BY DATE(created_at) 
+              ORDER BY DATE(created_at) ASC";
+    $stmt = $db->query($query);
 
-/**
- * Get Database Connection
- * Supports SQLite (local dev) and MySQL (production) via DB_DRIVER constant
- */
-function getDB() {
-    static $db = null;
-    if ($db === null) {
-        try {
-            $driver = defined('DB_DRIVER') ? DB_DRIVER : 'mysql';
-
-            if ($driver === 'sqlite') {
-                $db = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]);
-                $db->exec('PRAGMA foreign_keys = ON');
-                $db->exec('PRAGMA journal_mode = WAL');
-                // Use Pdo\Sqlite::createFunction() (PHP 8.5+) or fall back silently
-                $sqFn = function(string $name, callable $fn, int $argc = -1) use ($db): void {
-                    if ($db instanceof Pdo\Sqlite) {
-                        $db->createFunction($name, $fn, $argc);
-                    } elseif (method_exists($db, 'sqliteCreateFunction')) {
-                        // Suppress deprecation on PHP < 8.5 where this is the only option
-                        @$db->sqliteCreateFunction($name, $fn, $argc);
-                    }
-                };
-                $sqFn('NOW', function() { return date('Y-m-d H:i:s'); }, 0);
-                $sqFn('CURDATE', function() { return date('Y-m-d'); }, 0);
-                $sqFn('DATE_FORMAT', function($date, $format) {
-                    $map = ['%Y'=>'Y','%m'=>'m','%d'=>'d','%H'=>'H','%i'=>'i','%s'=>'s','%M'=>'F','%b'=>'M'];
-                    $phpFmt = str_replace(array_keys($map), array_values($map), $format);
-                    return $date ? date($phpFmt, strtotime($date)) : null;
-                }, 2);
-                $sqFn('DATE_SUB', function($date, $interval) {
-                    if (preg_match('/(\d+)\s+(DAY|MONTH|YEAR|HOUR|MINUTE)/i', $interval, $m)) {
-                        return date('Y-m-d H:i:s', strtotime("-{$m[1]} {$m[2]}", strtotime($date)));
-                    }
-                    return $date;
-                }, 2);
-                $sqFn('DATE_ADD', function($date, $interval) {
-                    if (preg_match('/(\d+)\s+(DAY|MONTH|YEAR|HOUR|MINUTE)/i', $interval, $m)) {
-                        return date('Y-m-d H:i:s', strtotime("+{$m[1]} {$m[2]}", strtotime($date)));
-                    }
-                    return $date;
-                }, 2);
-                $sqFn('DATEDIFF', function($d1, $d2) {
-                    return round((strtotime($d1) - strtotime($d2)) / 86400);
-                }, 2);
-                $sqFn('TIMESTAMPDIFF', function($unit, $d1, $d2) {
-                    $diff = strtotime($d2) - strtotime($d1);
-                    switch (strtoupper($unit)) {
-                        case 'DAY':    return (int)($diff / 86400);
-                        case 'HOUR':   return (int)($diff / 3600);
-                        case 'MINUTE': return (int)($diff / 60);
-                        case 'MONTH':  return (int)($diff / 2592000);
-                        case 'YEAR':   return (int)($diff / 31536000);
-                        default: return $diff;
-                    }
-                }, 3);
-                $sqFn('CONCAT', function() { return implode('', func_get_args()); });
-                $sqFn('IF', function($cond, $true, $false) { return $cond ? $true : $false; }, 3);
-            } else {
-                $dsn = "mysql:charset=utf8mb4";
-                if (defined('DB_SOCKET') && !empty(DB_SOCKET)) {
-                    $dsn .= ";unix_socket=" . DB_SOCKET;
-                } else {
-                    $dsn .= ";host=" . DB_HOST;
-                }
-                $dsn .= ";dbname=" . DB_NAME;
-                $db = new PDO($dsn, DB_USER, DB_PASS, [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                ]);
-            }
-        } catch (PDOException $e) {
-            error_log("Database Connection Error: " . $e->getMessage());
-            die("Database connection failed. Please try again later.");
-        }
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $sales[$row['date']] = $row['daily_sales'];
     }
-    return $db;
+
+    return $sales;
 }
 
-// ============================================
-// SECURITY FUNCTIONS
-// ============================================
-
-/**
- * Generate CSRF Token
- */
-function generateCSRF() {
-    if (empty($_SESSION['csrf_token']) || time() > ($_SESSION['csrf_token_time'] ?? 0) + CSRF_TOKEN_LIFETIME) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        $_SESSION['csrf_token_time'] = time();
-    }
-    return $_SESSION['csrf_token'];
+function getTopSellingProducts($limit = 5) {
+    global $db;
+    $query = "SELECT p.id, p.name, p.main_image, SUM(oi.quantity) as total_sold 
+              FROM products p
+              JOIN order_items oi ON p.id = oi.product_id
+              GROUP BY p.id
+              ORDER BY total_sold DESC
+              LIMIT {$limit}";
+    return $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
 }
 
-/**
- * Verify CSRF Token
- */
-function verifyCSRF(string $token): bool {
-    if (empty($token) || empty($_SESSION['csrf_token'])) {
-        return false;
-    }
-    return hash_equals($_SESSION['csrf_token'], $token);
+function getRecentOrders($limit = 5) {
+    global $db;
+    $query = "SELECT * FROM orders ORDER BY created_at DESC LIMIT {$limit}";
+    return $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
 }
 
-/**
- * Sanitize input
- */
-function sanitize(mixed $data): mixed {
-    if (is_array($data)) {
-        return array_map('sanitize', $data);
-    }
-    return htmlspecialchars(trim($data ?? ''), ENT_QUOTES, 'UTF-8');
+function jsonResponse($data, $statusCode = 200) {
+    header('Content-Type: application/json');
+    http_response_code($statusCode);
+    echo json_encode($data);
+    exit;
 }
 
-/**
- * Clean string for output
- */
-function clean(mixed $str): string {
-    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
-}
+// --- Auth & Security ---
 
-// ============================================
-// AUTH FUNCTIONS
-// ============================================
-
-/**
- * Check if admin is logged in
- */
 function isAdminLoggedIn() {
-    return isset($_SESSION['admin_id']) && !empty($_SESSION['admin_id']);
+    return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 
-/**
- * Require admin login (redirect if not)
- */
 function requireAdminLogin() {
     if (!isAdminLoggedIn()) {
-        if (isAjaxRequest()) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized. Please login.']);
-            exit;
-        }
-        header('Location: ' . getAdminUrl('login.php'));
+        setFlash('error', 'Please log in to access this page.');
+        header('Location: /admin/login.php');
         exit;
     }
 }
 
-/**
- * Get current admin data
- */
-function getCurrentAdmin() {
-    if (!isAdminLoggedIn()) return null;
-    
-    $db = getDB();
-    $stmt = $db->prepare("SELECT id, name, email, role, last_login FROM admins WHERE id = ? AND status = 1");
-    $stmt->execute([$_SESSION['admin_id']]);
-    return $stmt->fetch();
-}
-
-/**
- * Admin login
- */
-function adminLogin(string $email, string $password): array {
-    $db = getDB();
-    $stmt = $db->prepare("SELECT id, name, email, password, role FROM admins WHERE email = ? AND status = 1");
-    $stmt->execute([$email]);
-    $admin = $stmt->fetch();
-    
-    if ($admin && password_verify($password, $admin['password'])) {
-        $_SESSION['admin_id'] = $admin['id'];
-        $_SESSION['admin_name'] = $admin['name'];
-        $_SESSION['admin_email'] = $admin['email'];
-        $_SESSION['admin_role'] = $admin['role'];
-        
-        // Update last login
-        $stmt = $db->prepare("UPDATE admins SET last_login = NOW() WHERE id = ?");
-        $stmt->execute([$admin['id']]);
-        
-        // Log activity
-        logActivity('login', 'admin', $admin['id'], ['ip' => getClientIP()]);
-        
-        return ['success' => true, 'admin' => $admin];
+function generateCSRF() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
-    
-    return ['success' => false, 'message' => 'Invalid email or password.'];
+    return $_SESSION['csrf_token'];
 }
 
-/**
- * Admin logout
- */
-function adminLogout() {
-    if (isAdminLoggedIn()) {
-        logActivity('logout', 'admin', $_SESSION['admin_id']);
+function verifyCSRF($token) {
+    if (isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token)) {
+        unset($_SESSION['csrf_token']);
+        return true;
     }
-    session_destroy();
-    session_start();
+    return false;
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
-/**
- * Check if AJAX request
- */
-function isAjaxRequest() {
-    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-}
-
-/**
- * Get client IP
- */
-function getClientIP() {
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) return $_SERVER['HTTP_CLIENT_IP'];
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) return $_SERVER['HTTP_X_FORWARDED_FOR'];
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-}
-
-/**
- * Get admin URL
- */
-function getAdminUrl($path = '') {
-    return SITE_URL . '/admin/' . ltrim($path, '/');
-}
-
-/**
- * Format price with currency
- */
-function formatPrice(float|int $amount): string {
-    return CURRENCY_SYMBOL . number_format((float)$amount, 2);
-}
-
-/**
- * Format Indian price (e.g., ₹1,23,456.00)
- */
-function formatIndianPrice(float|int $amount): string {
-    $amount = (float)$amount;
-    $decimals = ($amount == floor($amount)) ? 0 : 2;
-    $formatted = number_format($amount, $decimals, '.', '');
-    $parts = explode('.', $formatted);
-    $intPart = $parts[0];
-    
-    if (strlen($intPart) > 3) {
-        $last3 = substr($intPart, -3);
-        $restUnits = substr($intPart, 0, -3);
-        $restUnits = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $restUnits);
-        $intPart = $restUnits . ',' . $last3;
-    }
-    
-    return CURRENCY_SYMBOL . $intPart . (isset($parts[1]) ? '.' . $parts[1] : '');
-}
-
-/**
- * Generate unique order number
- */
-function generateOrderNumber() {
-    return 'DV-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-}
-
-/**
- * Generate slug from string
- */
-function generateSlug(string $string): string {
-    $slug = preg_replace('/[^a-zA-Z0-9\s-]/', '', strtolower($string));
-    $slug = preg_replace('/[\s-]+/', '-', $slug);
-    $slug = trim($slug, '-');
-    return $slug;
-}
-
-/**
- * Generate unique slug
- */
-function generateUniqueSlug(string $string, string $table, ?int $excludeId = null): string {
-    $db = getDB();
-    $slug = generateSlug($string);
-    $originalSlug = $slug;
-    $counter = 1;
-    
-    while (true) {
-        $sql = "SELECT id FROM {$table} WHERE slug = ?";
-        $params = [$slug];
-        if ($excludeId) {
-            $sql .= " AND id != ?";
-            $params[] = $excludeId;
-        }
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        if (!$stmt->fetch()) break;
-        $slug = $originalSlug . '-' . $counter++;
-    }
-    
-    return $slug;
-}
-
-/**
- * Upload file with validation
- */
-function uploadFile(array $file, string $subfolder = 'products', ?array $allowedTypes = null): array {
-    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
-        return ['success' => false, 'message' => 'No file uploaded or upload error.'];
-    }
-    
-    if ($file['size'] > UPLOAD_MAX_SIZE) {
-        return ['success' => false, 'message' => 'File size exceeds maximum allowed size (5MB).'];
-    }
-    
-    $types = $allowedTypes ?? ALLOWED_IMAGE_TYPES;
-    $finfo    = new \finfo(FILEINFO_MIME_TYPE);
-    $mimeType = $finfo->file($file['tmp_name']);
-    unset($finfo); // explicit release (no finfo_close needed)
-    
-    if (!in_array($mimeType, $types)) {
-        return ['success' => false, 'message' => 'Invalid file type.'];
-    }
-    
-    $uploadDir = UPLOAD_PATH . $subfolder . '/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
-    
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = uniqid() . '-' . time() . '.' . $extension;
-    $filepath = $uploadDir . $filename;
-    
-    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        return ['success' => true, 'filename' => $filename, 'path' => 'uploads/' . $subfolder . '/' . $filename];
-    }
-    
-    return ['success' => false, 'message' => 'Failed to save file.'];
-}
-
-/**
- * Delete uploaded file
- */
-function deleteUploadedFile(?string $path): void {
-    if ($path && file_exists(dirname(__DIR__) . '/' . $path)) {
-        unlink(dirname(__DIR__) . '/' . $path);
-    }
-}
-
-/**
- * Paginate results
- */
-function paginate(string $query, array $params, int $page = 1, int $perPage = ADMIN_PER_PAGE): array {
-    $db = getDB();
-    $page = max(1, (int)$page);
-    $offset = ($page - 1) * $perPage;
-    
-    // Get total count
-    $countQuery = "SELECT COUNT(*) as total FROM ({$query}) as count_table";
-    $stmt = $db->prepare($countQuery);
-    $stmt->execute($params);
-    $total = (int)$stmt->fetch()['total'];
-    
-    // Get paginated results
-    $dataQuery = $query . " LIMIT {$perPage} OFFSET {$offset}";
-    $stmt = $db->prepare($dataQuery);
-    $stmt->execute($params);
-    $data = $stmt->fetchAll();
-    
-    return [
-        'data' => $data,
-        'total' => $total,
-        'page' => $page,
-        'per_page' => $perPage,
-        'total_pages' => ceil($total / $perPage),
-        'has_prev' => $page > 1,
-        'has_next' => $page < ceil($total / $perPage)
-    ];
-}
-
-/**
- * Log admin activity
- */
-function logActivity(string $action, ?string $entityType = null, int|string|null $entityId = null, ?array $details = null): void {
+function logActivity($action, $entity_type = null, $entity_id = null, $details = []) {
     try {
-        $db = getDB();
-        $stmt = $db->prepare("INSERT INTO activity_log (admin_id, action, entity_type, entity_id, details, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $_SESSION['admin_id'] ?? null,
-            $action,
-            $entityType,
-            $entityId,
-            $details ? json_encode($details) : null,
-            getClientIP(),
-            $_SERVER['HTTP_USER_AGENT'] ?? null
-        ]);
+        global $db;
+        $sql = "INSERT INTO activity_log (admin_id, action, entity_type, entity_id, details, ip_address, user_agent) 
+                VALUES (:admin_id, :action, :entity_type, :entity_id, :details, :ip_address, :user_agent)";
+        
+        $stmt = $db->prepare($sql);
+
+        $admin_id = $_SESSION['admin_id'] ?? null;
+        $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN';
+        $details_json = json_encode($details);
+
+        $stmt->bindParam(':admin_id', $admin_id, PDO::PARAM_INT);
+        $stmt->bindParam(':action', $action);
+        $stmt->bindParam(':entity_type', $entity_type);
+        $stmt->bindParam(':entity_id', $entity_id, PDO::PARAM_INT);
+        $stmt->bindParam(':details', $details_json);
+        $stmt->bindParam(':ip_address', $ip_address);
+        $stmt->bindParam(':user_agent', $user_agent);
+        
+        $stmt->execute();
     } catch (Exception $e) {
-        error_log("Activity log error: " . $e->getMessage());
+        error_log("Failed to log activity: " . $e->getMessage());
     }
 }
 
-/**
- * Get settings value
- */
-function getSetting(string $key, mixed $default = null): mixed {
-    $db = getDB();
-    $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
-    $stmt->execute([$key]);
-    $result = $stmt->fetch();
-    return $result ? $result['setting_value'] : $default;
-}
+// --- Flash Messages ---
 
-/**
- * Update setting value
- */
-function updateSetting(string $key, mixed $value): bool {
-    $db = getDB();
-    $stmt = $db->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?");
-    return $stmt->execute([$value, $key]);
-}
-
-/**
- * JSON response
- */
-function jsonResponse(mixed $data, int $statusCode = 200): never {
-    http_response_code($statusCode);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-/**
- * Redirect
- */
-function redirect(string $url): never {
-    header("Location: {$url}");
-    exit;
-}
-
-/**
- * Flash message
- */
-function setFlash(string $type, string $message): void {
+function setFlash($type, $message) {
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
 }
 
-/**
- * Get flash message
- */
 function getFlash() {
     if (isset($_SESSION['flash'])) {
         $flash = $_SESSION['flash'];
@@ -486,157 +133,152 @@ function getFlash() {
     return null;
 }
 
-/**
- * Time ago
- */
-function timeAgo(string $datetime): string {
-    $now = new DateTime();
-    $ago = new DateTime($datetime);
-    $diff = $now->diff($ago);
-    
-    if ($diff->y > 0) return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
-    if ($diff->m > 0) return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
-    if ($diff->d > 0) return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
-    if ($diff->h > 0) return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
-    if ($diff->i > 0) return $diff->i . ' min' . ($diff->i > 1 ? 's' : '') . ' ago';
-    return 'Just now';
+// --- Data & String Utilities ---
+
+function sanitize($data) {
+    if (is_array($data)) {
+        return array_map('sanitize', $data);
+    }
+    return trim($data ?? '');
 }
 
-/**
- * Get order status badge class
- */
-function getStatusBadge(string $status): string {
-    $badges = [
-        'pending' => 'badge-warning',
-        'confirmed' => 'badge-info',
-        'processing' => 'badge-primary',
-        'shipped' => 'badge-purple',
-        'delivered' => 'badge-success',
-        'cancelled' => 'badge-danger',
-        'returned' => 'badge-dark',
-        'paid' => 'badge-success',
-        'failed' => 'badge-danger',
-        'refunded' => 'badge-info'
+function clean($str) {
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+function timeAgo($timestamp) {
+    if (!$timestamp) return 'never';
+    try {
+        $datetime = new DateTime($timestamp);
+        $now = new DateTime();
+        $diff = $now->diff($datetime);
+
+        if ($diff->y > 0) return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+        if ($diff->m > 0) return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+        if ($diff->d > 0) return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+        if ($diff->h > 0) return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+        if ($diff->i > 0) return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+        
+        $seconds = $diff->s;
+        if ($seconds > 10) return $seconds . ' seconds ago';
+    } catch(Exception $e) {
+        return 'invalid date';
+    }
+    
+    return 'just now';
+}
+
+function buildQueryParams($newParams = []) {
+    $queryParams = $_GET;
+    // Unset params that we might be replacing, like page
+    unset($queryParams['page']);
+
+    $allParams = array_merge($queryParams, $newParams);
+    
+    if (empty($allParams)) {
+        return '';
+    }
+    
+    return '?' . http_build_query($allParams);
+}
+
+// --- Pagination ---
+
+function paginate($baseQuery, $params = [], $currentPage = 1, $perPage = 20) {
+    global $db;
+
+    $countQuery = 'SELECT COUNT(*) FROM (' . preg_replace('/LIMIT \d+ OFFSET \d+$/i', '', $baseQuery) . ') AS count_alias';
+    $countQuery = preg_replace('/ORDER BY .*/i', '', $countQuery);
+
+    try {
+        $countStmt = $db->prepare($countQuery);
+        $countStmt->execute($params);
+        $totalRecords = (int) $countStmt->fetchColumn();
+    } catch(Exception $e) {
+        $countQuerySimple = preg_replace('/SELECT .*? FROM/i', 'SELECT COUNT(*) FROM', $baseQuery);
+        $countQuerySimple = preg_replace('/ORDER BY .*/i', '', $countQuerySimple);
+        $countStmt = $db->prepare($countQuerySimple);
+        $countStmt->execute($params);
+        $totalRecords = (int) $countStmt->fetchColumn();
+    }
+    
+    $totalPages = (int) ceil($totalRecords / $perPage);
+    $currentPage = max(1, min((int)$currentPage, $totalPages > 0 ? $totalPages : 1));
+    
+    $offset = ($currentPage - 1) * $perPage;
+    $dataQuery = $baseQuery . " LIMIT :limit OFFSET :offset";
+    
+    $dataStmt = $db->prepare($dataQuery);
+    
+    if (!empty($params)) {
+        foreach ($params as $key => $val) {
+             $dataStmt->bindValue($key, $val);
+        }
+    }
+    
+    $dataStmt->bindValue(':limit', (int) $perPage, PDO::PARAM_INT);
+    $dataStmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+    
+    $dataStmt->execute();
+    $data = $dataStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return [
+        'data' => $data,
+        'total' => $totalRecords,
+        'total_pages' => $totalPages,
+        'page' => $currentPage,
+        'per_page' => $perPage,
+        'has_prev' => $currentPage > 1,
+        'has_next' => $currentPage < $totalPages,
     ];
-    return $badges[$status] ?? 'badge-secondary';
 }
 
-/**
- * Calculate dashboard stats
- */
-function getDashboardStats() {
-    $db = getDB();
-    
-    $stats = [];
-    
-    // Total revenue
-    $stmt = $db->query("SELECT COALESCE(SUM(total), 0) as total_revenue FROM orders WHERE payment_status = 'paid'");
-    $stats['total_revenue'] = (float)$stmt->fetch()['total_revenue'];
-    
-    // Today's revenue
-    $stmt = $db->query("SELECT COALESCE(SUM(total), 0) as today_revenue FROM orders WHERE payment_status = 'paid' AND DATE(created_at) = CURDATE()");
-    $stats['today_revenue'] = (float)$stmt->fetch()['today_revenue'];
-    
-    // Total orders
-    $stmt = $db->query("SELECT COUNT(*) as total_orders FROM orders");
-    $stats['total_orders'] = (int)$stmt->fetch()['total_orders'];
-    
-    // Pending orders
-    $stmt = $db->query("SELECT COUNT(*) as pending_orders FROM orders WHERE status = 'pending'");
-    $stats['pending_orders'] = (int)$stmt->fetch()['pending_orders'];
-    
-    // Total products
-    $stmt = $db->query("SELECT COUNT(*) as total_products FROM products WHERE is_active = 1");
-    $stats['total_products'] = (int)$stmt->fetch()['total_products'];
-    
-    // Total customers
-    $stmt = $db->query("SELECT COUNT(*) as total_customers FROM customers WHERE is_active = 1");
-    $stats['total_customers'] = (int)$stmt->fetch()['total_customers'];
-    
-    // Low stock products
-    $stmt = $db->query("SELECT COUNT(*) as low_stock FROM products WHERE stock <= low_stock_threshold AND is_active = 1");
-    $stats['low_stock'] = (int)$stmt->fetch()['low_stock'];
-    
-    // Total coupons
-    $stmt = $db->query("SELECT COUNT(*) as total_coupons FROM coupons WHERE is_active = 1");
-    $stats['total_coupons'] = (int)$stmt->fetch()['total_coupons'];
-    
-    return $stats;
-}
+function getActivityLogs($filters = [], $page = 1, $limit = 20) {
+    global $db;
 
-/**
- * Get recent orders
- */
-function getRecentOrders($limit = 10) {
-    $db = getDB();
-    $stmt = $db->prepare("
-        SELECT o.id, o.order_number, o.customer_name, o.total, o.status, o.payment_status, o.created_at 
-        FROM orders o 
-        ORDER BY o.created_at DESC 
-        LIMIT ?
-    ");
-    $stmt->execute([$limit]);
-    return $stmt->fetchAll();
-}
+    $whereClauses = [];
+    $params = [];
 
-/**
- * Get sales chart data (last 30 days)
- */
-function getSalesChartData($days = 30) {
-    $db = getDB();
-    $driver = defined('DB_DRIVER') ? DB_DRIVER : 'sqlite';
-    if ($driver === 'sqlite') {
-        $stmt = $db->prepare("
-            SELECT DATE(created_at) as date, COALESCE(SUM(total), 0) as revenue, COUNT(*) as orders
-            FROM orders
-            WHERE DATE(created_at) >= DATE('now', '-' || ? || ' days')
-            GROUP BY DATE(created_at)
-            ORDER BY date ASC
-        ");
-    } else {
-        $stmt = $db->prepare("
-            SELECT DATE(created_at) as date, COALESCE(SUM(total), 0) as revenue, COUNT(*) as orders
-            FROM orders
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-            GROUP BY DATE(created_at)
-            ORDER BY date ASC
-        ");
+    if (!empty($filters['user_id'])) {
+        $whereClauses[] = 'user_id = :user_id';
+        $params[':user_id'] = $filters['user_id'];
     }
-    $stmt->execute([$days]);
-    return $stmt->fetchAll();
-}
-
-/**
- * Get top selling products
- */
-function getTopSellingProducts($limit = 5) {
-    $db = getDB();
-    $stmt = $db->prepare("
-        SELECT p.id, p.name, p.main_image, p.price, SUM(oi.quantity) as total_sold, SUM(oi.total) as total_revenue
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
-        JOIN orders o ON oi.order_id = o.id AND o.status != 'cancelled'
-        GROUP BY oi.product_id
-        ORDER BY total_sold DESC
-        LIMIT ?
-    ");
-    $stmt->execute([$limit]);
-    return $stmt->fetchAll();
-}
-
-/**
- * Get order status counts
- */
-function getOrderStatusCounts() {
-    $db = getDB();
-    $stmt = $db->query("
-        SELECT status, COUNT(*) as count 
-        FROM orders 
-        GROUP BY status
-    ");
-    $counts = [];
-    while ($row = $stmt->fetch()) {
-        $counts[$row['status']] = (int)$row['count'];
+    if (!empty($filters['action_type'])) {
+        $whereClauses[] = 'action_type = :action_type';
+        $params[':action_type'] = $filters['action_type'];
     }
-    return $counts;
+
+    $whereSql = count($whereClauses) > 0 ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
+
+    $totalQuery = "SELECT COUNT(*) FROM activity_logs {$whereSql}";
+    $totalStmt = $db->prepare($totalQuery);
+    $totalStmt->execute($params);
+    $totalRecords = (int)$totalStmt->fetchColumn();
+    $totalPages = ceil($totalRecords / $limit);
+
+    $offset = ($page - 1) * $limit;
+    $logsQuery = "SELECT * FROM activity_logs {$whereSql} ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+    $logsStmt = $db->prepare($logsQuery);
+
+    foreach ($params as $key => &$val) {
+        $logsStmt->bindParam($key, $val);
+    }
+
+    $logsStmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $logsStmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+
+    $logsStmt->execute();
+    $logs = $logsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return [
+        'logs' => $logs,
+        'pagination' => [
+            'total' => $totalRecords,
+            'pages' => $totalPages,
+            'current' => $page,
+            'limit' => $limit
+        ]
+    ];
 }
+
+?>
