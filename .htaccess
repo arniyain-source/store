@@ -75,8 +75,8 @@ Options -Indexes
 </IfModule>
 
 # ── Custom Error Pages ──
-ErrorDocument 404 /index.html
-ErrorDocument 500 /index.html
+ErrorDocument 404 /index.php
+ErrorDocument 500 /index.php
 
 # ── Force HTTPS ──
 <IfModule mod_rewrite.c>
@@ -101,15 +101,24 @@ ErrorDocument 500 /index.html
     # ── Route: /logout → admin/logout.php ──
     RewriteRule ^logout/?$ /admin/logout.php [L,QSA]
 
-    # ── Route: /shop → shop.html ──
-    RewriteRule ^shop/?$ /shop.html [L,QSA]
+    # ── Route: /shop → shop.php ──
+    RewriteRule ^shop/?$ /shop.php [L,QSA]
 
-    # ── Route: /login → login.html ──
-    RewriteRule ^login/?$ /login.html [L,QSA]
+    # ── Route: /product → product.php ──
+    RewriteRule ^product/?$ /product.php [L,QSA]
 
-    # ── Route: /register → register.html ──
-    RewriteRule ^register/?$ /register.html [L,QSA]
+    # ── Route: /login → login.php ──
+    RewriteRule ^login/?$ /login.php [L,QSA]
 
-    # ── Route: /checkout → checkout.html ──
-    RewriteRule ^checkout/?$ /checkout.html [L,QSA]
+    # ── Route: /register → register.php ──
+    RewriteRule ^register/?$ /register.php [L,QSA]
+
+    # ── Route: /checkout → checkout.php ──
+    RewriteRule ^checkout/?$ /checkout.php [L,QSA]
+
+    # ── Generic route for extensionless PHP files ──
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+    RewriteRule ^(.+?)/?$ /$1.php [L]
 </IfModule>
